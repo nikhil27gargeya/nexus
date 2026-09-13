@@ -1,0 +1,79 @@
+{
+  "id": "fathom",
+  "expected": "causal_harm",
+  "note": "Hit 31 failed syncs during the Mar 3 outage in their region; sync is 82% of their team's activity and 4 teammates were working. Remediation.",
+  "cancel_date": "2026-03-13",
+  "account": {
+    "user_id": "u_4812",
+    "name": "Fathom",
+    "region": "us-east-1",
+    "seats": 6,
+    "plan": "Pro",
+    "price_usd": 30,
+    "renews": "2026-04-13"
+  },
+  "sentry": {
+    "issues": [
+      {
+        "id": "SNTRY-8841",
+        "type": "SyncTimeoutError",
+        "title": "Sync job exceeded 120s timeout",
+        "user_count": 31,
+        "first_seen": "2026-03-03",
+        "last_seen": "2026-03-03",
+        "peak_date": "2026-03-03",
+        "daily": {
+          "2026-03-03": 31
+        },
+        "status": "resolved",
+        "resolved_in_release": "v4.12",
+        "resolved_at": "2026-03-05",
+        "events_since_fix": 0
+      },
+      {
+        "id": "SNTRY-8790",
+        "type": "WebhookRetryExceeded",
+        "title": "Webhook delivery retries exhausted",
+        "user_count": 16,
+        "first_seen": "2026-02-18",
+        "last_seen": "2026-02-18",
+        "peak_date": "2026-02-18",
+        "daily": {
+          "2026-02-18": 16
+        },
+        "status": "unresolved",
+        "resolved_in_release": null,
+        "resolved_at": null,
+        "events_since_fix": null
+      }
+    ]
+  },
+  "datadog": {
+    "incidents": [
+      {
+        "id": "INC-2291",
+        "title": "Sync jobs timing out",
+        "region": "us-east-1",
+        "severity": "SEV-2",
+        "services": [
+          "sync"
+        ],
+        "start": "2026-03-03T09:10:00Z",
+        "end": "2026-03-03T14:40:00Z",
+        "resolved_at": "2026-03-05T11:00:00Z"
+      }
+    ]
+  },
+  "mixpanel": {
+    "feature_share": {
+      "sync": 0.82,
+      "reports": 0.1,
+      "dashboards": 0.06,
+      "export": 0.02
+    },
+    "events_per_week": 60,
+    "active_members": {
+      "2026-03-03": 4
+    }
+  }
+}

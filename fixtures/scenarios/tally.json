@@ -1,0 +1,63 @@
+{
+  "id": "tally",
+  "expected": "insufficient_evidence",
+  "note": "42 export warnings on their account, but no outage in their region and export is 3% of their activity. Not a remediation.",
+  "cancel_date": "2026-03-13",
+  "account": {
+    "user_id": "u_7730",
+    "name": "Tally",
+    "region": "eu-west-1",
+    "seats": 9,
+    "plan": "Pro",
+    "price_usd": 30,
+    "renews": "2026-04-13"
+  },
+  "sentry": {
+    "issues": [
+      {
+        "id": "SNTRY-8602",
+        "type": "ExportRenderWarning",
+        "title": "PDF export rendered with fallback font",
+        "user_count": 42,
+        "first_seen": "2026-02-20",
+        "last_seen": "2026-02-20",
+        "peak_date": "2026-02-20",
+        "daily": {
+          "2026-02-20": 42
+        },
+        "status": "unresolved",
+        "resolved_in_release": null,
+        "resolved_at": null,
+        "events_since_fix": null
+      }
+    ]
+  },
+  "datadog": {
+    "incidents": [
+      {
+        "id": "INC-2291",
+        "title": "Sync jobs timing out",
+        "region": "us-east-1",
+        "severity": "SEV-2",
+        "services": [
+          "sync"
+        ],
+        "start": "2026-03-03T09:10:00Z",
+        "end": "2026-03-03T14:40:00Z",
+        "resolved_at": "2026-03-05T11:00:00Z"
+      }
+    ]
+  },
+  "mixpanel": {
+    "feature_share": {
+      "sync": 0.7,
+      "reports": 0.27,
+      "export": 0.03
+    },
+    "events_per_week": 70,
+    "active_members": {
+      "2026-02-20": 5,
+      "2026-03-03": 3
+    }
+  }
+}
