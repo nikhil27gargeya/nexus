@@ -58,6 +58,18 @@ def test_a_standard_offer_that_admits_fault_is_rejected_at_config_time():
         StandardOfferConfig(headline="Sorry about the outages, have 20% off")
 
 
+def test_the_event_stream_never_carries_the_stripe_customer_id(monkeypatch):
+    real_stripe_account = pipeline.FixtureApps.stripe_account
+
+    def with_id(self):
+        return real_stripe_account(self).model_copy(update={"stripe_customer_id": "cus_secretish"})
+
+    monkeypatch.setattr(pipeline.FixtureApps, "stripe_account", with_id)
+    events = _events("fathom")
+    assert "stripe_customer_id" not in _first(events, "run.started")["account"]
+    assert all("cus_secretish" not in json.dumps(e.data, default=str) for e in events)
+
+
 def test_fault_words_match_whole_words_only():
     assert fault_words_in("Sorry for the Outages. That's on us.") == ["on us", "outages", "sorry"]
     assert fault_words_in("We focus on usability, and coincidentally it's error-free") == ["error"]

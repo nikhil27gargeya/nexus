@@ -55,7 +55,7 @@ def run(scenario: str, *, fake: bool = False, live: bool = False, cfg: Settings 
 
     yield NexusEvent(type="run.started", data={
         "scenario": scenario,
-        "account": account.model_dump(mode="json"),
+        "account": account.model_dump(mode="json", exclude={"stripe_customer_id"}),
         "window": {"since": window_start.isoformat(), "until": cancel.isoformat()},
         "model": "fake" if fake else cfg.agent_model,
         "data": "live" if live else "fixtures",
