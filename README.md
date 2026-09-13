@@ -3,7 +3,7 @@
 **Connect Sentry, Datadog, Mixpanel and Stripe, call one API from your cancel flow, and Nexus tells you whether you
 owe that customer a remediation.**
 
-**Demo:** _link coming soon_
+**Demo video:** [insert link]
 
 ## What it does
 
@@ -103,27 +103,80 @@ Five design decisions carry it:
 - **Every run is recorded.** The demo replays real runs for free and offline; `nexus verify` re-reads their
   citations from the live apps.
 
-## Why trust it
+## Reliability brief
 
-| Failure mode | Structural defense | Proof |
+A summary, while a deep dive is in [`docs/system-brief.md`](docs/system-brief.md); the tech stack is documented in
+[`docs/stack.md`](docs/stack.md).
+
+**Core guarantee:** every failure path ends in the business's standard offer. None ends in a false remediation.
+
+### Trust boundaries
+
+| The model can | The model cannot |
+| --- | --- |
+| Choose which evidence to fetch, and in what order | Write to any app: it has no write tools |
+| Propose a claim, confidence and reasoning | Decide the outcome: the five checks in code do |
+| Cite evidence it fetched | Cite anything it didn't fetch (check 1 rejects it) |
+| Say how confident it is | Clear the bar without the evidence also passing checks 2–4 |
+| | Set or apply a credit: the amount comes from config, and a credit needs a saved run that proved harm plus a customer click |
+
+### Failure modes
+
+| Failure | What happens | Proof |
 | --- | --- | --- |
-| Agent invents evidence | Check 1 rejects any ID a tool didn't return | `tests/test_gates.py` |
-| Agent blames an incident in another region | Check 3 recomputes region and window from Datadog data | `tests/test_gates.py` |
+| Agent invents evidence | Check 1 rejects any ID a tool didn't return → standard offer | `tests/test_gates.py` |
+| Agent blames an incident in another region | Check 3 recomputes region and timing from Datadog data | `tests/test_gates.py` |
 | Agent is overconfident on a weak story | Checks 2–4 recompute from raw evidence; check 5 needs ≥0.75 | first real run at 0.72 was correctly refused |
 | Customer hit errors in a feature they barely use | Check 4 needs the broken feature to be ≥50% of their activity, with someone working that day | `tests/test_gates.py` |
-| An app is down | Error returned to the agent as data; missing evidence → standard offer | `tests/test_pipeline.py` |
-| Claude fails or runs out of steps | `insufficient_evidence` → standard offer | `tests/test_loop.py` |
+| Sentry, Datadog or Mixpanel down, slow or rate-limited | One retry after a short pause, then the error goes to the agent as data; missing evidence → standard offer | `tests/test_http.py`, `tests/test_pipeline.py` |
+| Claude errors or runs out of steps | "Last chance" nudge, then `insufficient_evidence` → standard offer | `tests/test_loop.py` |
+| Agent submits before checking usage or trying to disprove itself | Verdict refused; the agent must keep investigating | `tests/test_loop.py` |
+| Prompt injection inside app data | Tool output is treated as data, and the checks decide regardless | checks recompute from raw evidence |
+| Offer copy that admits fault ("sorry", "outage"…) | Config refuses to load | `tests/test_pipeline.py` |
 | Double click on a credit | "Already credited" check plus a Stripe idempotency key | live Stripe test, `tests/test_stripe_actions.py` |
-| Someone requests a credit without proof | API returns 409 | `tests/test_stripe_actions.py` |
-| Recorded evidence no longer matches reality | `nexus verify` re-reads every citation from the live apps | [`examples/*/verify.txt`](examples) |
+| Credit requested without proof | API returns 409 | `tests/test_stripe_actions.py` |
+| Saved evidence no longer matches reality | `nexus verify` re-reads every citation from the live apps | [`examples/*/verify.txt`](examples) |
+| No internet during the demo | Saved real runs replay with the same pacing | `tests/test_api.py` |
 
-## Evidence it works
+### How we know it works
 
-- **Evals, Claude Sonnet 5 on 4 scenarios:** 4/4 correct, **0 false remediations**, 0 missed
+- **Evals, Claude Sonnet 5 on 4 labelled scenarios:** 4/4 correct, **0 false remediations**, 0 missed
   ([results](evals/results/latest.md)).
-- **Live runs:** Fathom → remediation (7 steps, confidence 0.90, all checks pass). Quanta → standard offer
-  (4 steps, `no_harm`, 0.95). `nexus verify` re-reads their citations from the live apps ([`examples/`](examples)).
-- **Offline tests:** 65 pytest tests with fixtures and a scripted model; no network or keys. CI runs them on every push.
+- **Real runs on live data:** Fathom → remediation (7 steps, confidence 0.90, all five checks pass). Quanta →
+  standard offer (4 steps, `no_harm`, 0.95) ([`examples/`](examples)).
+- **Live verification:** `nexus verify` re-read every cited ID from Sentry, Datadog and Mixpanel: Fathom 3/3,
+  Quanta 1/1.
+- **Live Stripe checks (test mode):** credit applied once, duplicate refused, unproven incident refused, discount and
+  scheduled cancel applied, reset reverses all of it.
+- **Offline tests:** 65 pytest tests with fixtures and a scripted model, no network or keys. CI runs lint, the tests
+  and both offline scenarios on every pull request.
+
+### Trade-offs
+
+| Decision | Gain | Cost |
+| --- | --- | --- |
+| One agent, not multi-agent | Simple to test and explain; one trace | No separate agent arguing the other side (the self-check and code checks cover it) |
+| Our own ~100-line loop, not a framework | Every guard is explicit and tested | We maintain it; no built-in tracing |
+| Code checks decide, the model proposes | Deterministic and auditable | Can miss real harm that doesn't fit the rules |
+| Standard offer as the fallback | Every customer still gets the normal retention flow | Hurt customers the checks miss get no remediation |
+| Claude Sonnet 5, not Opus 5 | Faster and cheaper per cancellation | Less headroom on subtle cases; needed prompt calibration |
+| Fixed thresholds (10 errors, within a day, 50% share, 0.75) | Transparent and testable | Not tuned per business; adjustable in config |
+| Direct REST, not vendor MCP servers | Exact queries, stable IDs, controlled retries | More client code to maintain |
+| Replays in the demo | Free rehearsals, identical runs, works offline | A replay isn't a fresh run (`?fresh` runs live) |
+
+### Security
+
+- API keys live only in `.env`, which git ignores; each key has only the permissions it needs, and Stripe is test mode.
+- `nexus serve` listens on this machine only (`127.0.0.1`); the API has no login, so it isn't meant to be deployed.
+- Stripe customer IDs are left out of the event stream and saved runs.
+
+### Known limits
+
+- The Datadog trial can't store incident impact windows via the API, so the window is written into the incident title.
+- Mixpanel's free plan blocks the query API; Nexus reads the export API instead.
+- Evals are small: 4 labelled scenarios plus 2 live customers.
+- No personal-data redaction before tool output reaches the model.
+- One local server: no auth, multi-tenancy or deployment; a real product would call Nexus from its cancel webhook.
 
 ## Run it live
 
@@ -150,22 +203,14 @@ The standard offer and remediation credit are configured per business in
 ```
 backend/src/nexus/
   agent/     loop, tools, evidence board, Claude and scripted models, prompt
-  decide/    usage stats, the five checks, remediation and standard offer
-  apps/      live Sentry/Datadog/Mixpanel/Stripe clients, fixtures, Stripe actions
+  decide/    the five checks, remediation and standard offer
+  apps/      live Sentry/Datadog/Mixpanel/Stripe clients, shared HTTP helper, fixtures, Stripe actions
   seed/      demo data for the live apps
-  api/       streaming API, recorded replays, customer actions
+  api/       streaming API, replays, customer actions
   pipeline.py  cli.py  evals.py  verify.py
-demo/v2/     the demo page
-fixtures/    scenario data · replays/  saved demo runs · examples/  captured runs · evals/  results
-docs/        system brief, stack rationale, commit plan
+demo/v2/     the demo page and per-app evidence pages
+fixtures/    scenario data · examples/  captured real runs · evals/  results
+docs/        system and reliability brief, stack rationale
 ```
-
-## Honest limits
-
-- The Datadog trial can't store incident impact windows via the API, so the window is written into the incident title.
-- Mixpanel's free plan blocks the query API; Nexus reads the raw export API instead.
-- Evals are small: 4 fixture scenarios plus 2 live customers.
-- No personal-data redaction before tool output reaches the model.
-- One local server: no auth, multi-tenancy or deployment; a real product would trigger Nexus from its cancel webhook.
 
 Built for a hackathon.
