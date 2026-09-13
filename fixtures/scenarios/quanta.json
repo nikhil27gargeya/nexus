@@ -1,0 +1,45 @@
+{
+  "id": "quanta",
+  "expected": "no_harm",
+  "note": "No errors on their account and no outage in their region. Nexus admits nothing: standard offer only.",
+  "cancel_date": "2026-03-13",
+  "account": {
+    "user_id": "u_2291",
+    "name": "Quanta",
+    "region": "ap-southeast-2",
+    "seats": 3,
+    "plan": "Pro",
+    "price_usd": 30,
+    "renews": "2026-04-13"
+  },
+  "sentry": {
+    "issues": []
+  },
+  "datadog": {
+    "incidents": [
+      {
+        "id": "INC-2291",
+        "title": "Sync jobs timing out",
+        "region": "us-east-1",
+        "severity": "SEV-2",
+        "services": [
+          "sync"
+        ],
+        "start": "2026-03-03T09:10:00Z",
+        "end": "2026-03-03T14:40:00Z",
+        "resolved_at": "2026-03-05T11:00:00Z"
+      }
+    ]
+  },
+  "mixpanel": {
+    "feature_share": {
+      "reports": 0.45,
+      "sync": 0.3,
+      "dashboards": 0.25
+    },
+    "events_per_week": 40,
+    "active_members": {
+      "2026-03-03": 1
+    }
+  }
+}

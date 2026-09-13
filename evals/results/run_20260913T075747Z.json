@@ -1,0 +1,67 @@
+{
+  "model": "claude-sonnet-5",
+  "prompt_version": "488bb732",
+  "at": "20260913T075747Z",
+  "rows": [
+    {
+      "scenario": "fathom",
+      "run": 1,
+      "expected_claim": "causal_harm",
+      "claim": "causal_harm",
+      "confidence": 0.9,
+      "expected_outcome": "remediation",
+      "outcome": "remediation",
+      "stopped_at": null,
+      "steps": 7,
+      "seconds": 18.4,
+      "correct": true,
+      "false_remediation": false,
+      "error": null
+    },
+    {
+      "scenario": "canvasly",
+      "run": 1,
+      "expected_claim": "no_harm",
+      "claim": "no_harm",
+      "confidence": 0.93,
+      "expected_outcome": "standard_offer",
+      "outcome": "standard_offer",
+      "stopped_at": 2,
+      "steps": 4,
+      "seconds": 11.4,
+      "correct": true,
+      "false_remediation": false,
+      "error": null
+    },
+    {
+      "scenario": "tally",
+      "run": 1,
+      "expected_claim": "insufficient_evidence",
+      "claim": "no_harm",
+      "confidence": 0.85,
+      "expected_outcome": "standard_offer",
+      "outcome": "standard_offer",
+      "stopped_at": 3,
+      "steps": 5,
+      "seconds": 13.5,
+      "correct": true,
+      "false_remediation": false,
+      "error": null
+    },
+    {
+      "scenario": "quanta",
+      "run": 1,
+      "expected_claim": "no_harm",
+      "claim": "no_harm",
+      "confidence": 0.93,
+      "expected_outcome": "standard_offer",
+      "outcome": "standard_offer",
+      "stopped_at": 2,
+      "steps": 4,
+      "seconds": 11.4,
+      "correct": true,
+      "false_remediation": false,
+      "error": null
+    }
+  ]
+}

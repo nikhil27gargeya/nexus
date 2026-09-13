@@ -1,0 +1,63 @@
+{
+  "id": "canvasly",
+  "expected": "no_harm",
+  "note": "Only two failed avatar uploads; nothing that broke their work. Not a remediation.",
+  "cancel_date": "2026-03-13",
+  "account": {
+    "user_id": "u_5104",
+    "name": "Canvasly",
+    "region": "eu-west-1",
+    "seats": 4,
+    "plan": "Pro",
+    "price_usd": 30,
+    "renews": "2026-04-13"
+  },
+  "sentry": {
+    "issues": [
+      {
+        "id": "SNTRY-8815",
+        "type": "AvatarUploadFailed",
+        "title": "Avatar upload rejected: file too large",
+        "user_count": 2,
+        "first_seen": "2026-02-25",
+        "last_seen": "2026-02-25",
+        "peak_date": "2026-02-25",
+        "daily": {
+          "2026-02-25": 2
+        },
+        "status": "unresolved",
+        "resolved_in_release": null,
+        "resolved_at": null,
+        "events_since_fix": null
+      }
+    ]
+  },
+  "datadog": {
+    "incidents": [
+      {
+        "id": "INC-2291",
+        "title": "Sync jobs timing out",
+        "region": "us-east-1",
+        "severity": "SEV-2",
+        "services": [
+          "sync"
+        ],
+        "start": "2026-03-03T09:10:00Z",
+        "end": "2026-03-03T14:40:00Z",
+        "resolved_at": "2026-03-05T11:00:00Z"
+      }
+    ]
+  },
+  "mixpanel": {
+    "feature_share": {
+      "sync": 0.6,
+      "reports": 0.39,
+      "profile": 0.01
+    },
+    "events_per_week": 50,
+    "active_members": {
+      "2026-02-25": 2,
+      "2026-03-03": 2
+    }
+  }
+}
