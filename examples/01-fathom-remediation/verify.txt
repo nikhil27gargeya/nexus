@@ -1,0 +1,5 @@
+✓ MERGELINE-SYNC-1: Sentry SyncTimeoutError ×31 for u_4812
+✓ INC-2: Datadog Sync jobs timing out starting 2026-09-03T09:10:00Z
+✓ MXP-u_4812-2026-09-03: Mixpanel sync is 82% of activity, 4 active on 
+2026-09-03
+verified 3/3
