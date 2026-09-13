@@ -3,7 +3,7 @@
 **Connect Sentry, Datadog, Mixpanel and Stripe, call one API from your cancel flow, and Nexus tells you whether you
 owe that customer a remediation.**
 
-**Demo video:** [insert link]
+**Demo video:** [Watch the demo](https://youtu.be/i1OanAMc770)
 
 ## What it does
 
