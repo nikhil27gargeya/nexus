@@ -1,0 +1,30 @@
+# How this business responds when a customer cancels.
+# Nexus decides WHICH response is honest. The business decides WHAT each response offers.
+
+product = "Mergeline"
+
+[remediation]
+# Shown only when Nexus proves our failure caused the cancellation.
+credit_months = 2                        # credit = months × the customer's plan price
+headline = "Before you go, our systems had issues, and we want to make it right."
+accept_label = "Keep {plan} with credit"
+decline_label = "Cancel anyway"
+
+[standard_offer]
+# Shown to everyone else. It must not admit fault: no mention of outages, errors or blame.
+kind = "percent_off"                     # percent_off | pause | none
+percent_off = 20
+months = 3
+headline = "Before you go, stay for {percent_off}% off"
+body = "Keep your {plan} plan at {percent_off}% off for the next {months} months."
+accept_label = "Keep {plan} at {percent_off}% off"
+decline_label = "Cancel subscription"
+
+[features]
+# Which product feature each Sentry error type or Datadog incident belongs to.
+# Mixpanel tells Nexus how much of a customer's activity each feature is.
+SyncTimeoutError = "sync"
+WebhookRetryExceeded = "sync"
+ExportRenderWarning = "export"
+AvatarUploadFailed = "profile"
+"Sync jobs timing out" = "sync"
