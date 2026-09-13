@@ -100,7 +100,7 @@ class Remediation(BaseModel): headline: str; letter: str; proof: list[ProofLine]
 class StandardOffer(BaseModel): kind: Literal["percent_off","pause","none"]; headline: str; body: str; accept_label: str; decline_label: str
 ```
 
-**SSE events** (one stream feeds the demo page, CLI, recordings and `examples/`):
+**SSE events** (one stream feeds the demo page, CLI, replays and `examples/`):
 
 | Event | Payload | UI moment in `demo/v2` |
 | --- | --- | --- |
@@ -125,9 +125,9 @@ by default; `--send` writes to the apps, and `--app` limits it to one.
 
 | App | Account | Seeds |
 | --- | --- | --- |
-| Sentry | free developer org, project `mergeline-sync` | error events tagged with each customer's `user.id`. Fathom: 31 `SyncTimeoutError` on the outage day, fixed in release `v4.12`. Oakline: 42 export warnings. Nordvik: 2 avatar upload errors. Quanta: none |
+| Sentry | free developer org, project `mergeline-sync` | error events tagged with each customer's `user.id`. Fathom: 31 `SyncTimeoutError` on the outage day, fixed in release `v4.12`. Tally: 42 export warnings. Canvasly: 2 avatar upload errors. Quanta: none |
 | Datadog | 14-day trial, Incident Management | `Sync jobs timing out`, us-east-1, 09:10–14:40 UTC on the outage day, resolved (window stored in the title) |
-| Mixpanel | free project | 8 weeks of `feature_used` events per customer. Fathom: sync is 82% of activity, 4 teammates active on the outage day. Quanta: reports 45%, sync 30%. Oakline: export 3%. Nordvik: profile 1% |
+| Mixpanel | free project | 8 weeks of `feature_used` events per customer. Fathom: sync is 82% of activity, 4 teammates active on the outage day. Quanta: reports 45%, sync 30%. Tally: export 3%. Canvasly: profile 1% |
 | Stripe | test mode | customers with `metadata.user_id`, Pro $30/mo subscriptions, coupon `nexus_standard_offer` |
 
 `nexus stripe-reset` reverses demo credits, discounts and scheduled cancels before each rehearsal.
@@ -136,7 +136,7 @@ by default; `--send` writes to the apps, and `--app` limits it to one.
 
 - **Scenario fixtures** (`fixtures/scenarios/*.json`): the same four customers as plain JSON, served through the same
   interface as the live apps. They drive tests, evals, CI and `nexus run --fake`, with no keys.
-- **Recorded runs** (`recordings/`, local only): every live run is saved as its event stream, and the demo page
+- **Replays** (`replays/`, local only): every live run is saved as its event stream, and the demo page
   replays it with the same pacing, for free and offline.
 
 Live mode (`?fresh` or `nexus run --live`) calls Claude and the real apps.
@@ -154,8 +154,8 @@ Live mode (`?fresh` or `nexus run --live`) calls Claude and the real apps.
 | Step trace | Multi-step reasoning, visible | demo page + `examples/*/events.jsonl` |
 | CI | Lint, tests and offline Fathom/Quanta runs with no keys | `.github/workflows/ci.yml` |
 
-**Scenarios:** `fathom` (remediation), `quanta` (no errors, no outage), `oakline_tax` (errors in a feature they
-barely use, no outage in their region), `nordvik_design` (two minor errors). Only Fathom should get a remediation.
+**Scenarios:** `fathom` (remediation), `quanta` (no errors, no outage), `tally` (errors in a feature they
+barely use, no outage in their region), `canvasly` (two minor errors). Only Fathom should get a remediation.
 
 ## 6. Repo layout
 
@@ -220,7 +220,7 @@ Wire the page to live runs; record real runs into `examples/`; `nexus verify`; R
 - deterministic pipeline with an LLM inside
 - decisions in code: the model proposes, the five checks decide
 - grounding enforced in code: customer text uses only numbers from cited evidence
-- one event stream for the page, CLI, recordings and examples
+- one event stream for the page, CLI, replays and examples
 - replay without keys
 - verify through a second channel (`nexus verify`)
 - `examples/` of captured real runs
