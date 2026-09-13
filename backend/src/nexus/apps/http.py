@@ -5,7 +5,7 @@ error (honouring Retry-After), and turns any failure into an AppError the agent 
 """
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from typing import Any
 
 import httpx
@@ -40,7 +40,7 @@ def error_message(response: httpx.Response) -> str:
     return response.text[:200]
 
 
-def request(new_client: ClientFactory, app: str, method: str, url: str, *,
+def request(new_client: ClientFactory, app: str, method: str, url: str, *, ok_statuses: Collection[int] = (),
             sleep: Callable[[float], None] = time.sleep, **kwargs: Any) -> httpx.Response:
     for attempt in (1, 2):
         try:
@@ -54,18 +54,29 @@ def request(new_client: ClientFactory, app: str, method: str, url: str, *,
         if response.status_code in RETRY_STATUSES and attempt == 1:
             sleep(retry_wait(response))
             continue
-        if response.status_code >= 400:
+        if response.status_code >= 400 and response.status_code not in ok_statuses:
             raise AppError(f"{app} {response.status_code}: {error_message(response)}")
         return response
     raise AppError(f"{app} did not respond")
 
 
-def request_json(new_client: ClientFactory, app: str, method: str, url: str, **kwargs: Any) -> Any:
-    response = request(new_client, app, method, url, **kwargs)
+def _json(app: str, response: httpx.Response) -> Any:
+    if not response.content:
+        return {}
     try:
         return response.json()
     except ValueError as exc:
         raise AppError(f"{app} returned a response that isn't JSON") from exc
+
+
+def request_json(new_client: ClientFactory, app: str, method: str, url: str, **kwargs: Any) -> Any:
+    return _json(app, request(new_client, app, method, url, **kwargs))
+
+
+def get_json_or_none(new_client: ClientFactory, app: str, url: str, **params: Any) -> Any | None:
+    """GET that treats 404 as "doesn't exist yet" rather than an error."""
+    response = request(new_client, app, "GET", url, ok_statuses={404}, params=params)
+    return None if response.status_code == 404 else _json(app, response)
 
 
 def collect_pages(fetch_page: Callable[[int], list[Any]], page_size: int, max_pages: int = MAX_PAGES) -> list[Any]:

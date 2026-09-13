@@ -28,15 +28,21 @@ class Subscriber:
     transactions: list[dict[str, Any]]
 
 
+def find_customer(new_client: ClientFactory, user_id: str) -> dict[str, Any] | None:
+    """The Stripe customer tagged with this user_id, or None."""
+    found = request_json(new_client, "stripe", "GET", "/customers/search",
+                         params={"query": f"metadata['user_id']:'{user_id}'"})["data"]
+    return found[0] if found else None
+
+
 def lookup_subscriber(new_client: ClientFactory, user_id: str) -> Subscriber:
     """The Stripe customer tagged with this user_id, their subscription and their balance transactions."""
     def get(path: str, **params: Any) -> Any:
         return request_json(new_client, "stripe", "GET", path, params=params)
 
-    found = get("/customers/search", query=f"metadata['user_id']:'{user_id}'")["data"]
-    if not found:
+    customer = find_customer(new_client, user_id)
+    if customer is None:
         raise AppError(f"stripe: no customer with user_id {user_id}")
-    customer = found[0]
     subs = get("/subscriptions", customer=customer["id"], status="all")["data"]
     if not subs:
         raise AppError(f"stripe: {customer['name']} has no subscription")

@@ -25,6 +25,25 @@ def _get(new_client: ClientFactory, app: str, path: str, **params: Any) -> Any:
     return request_json(new_client, app, "GET", path, params=params)
 
 
+def sentry_client(cfg: Settings, timeout: float = 20) -> ClientFactory:
+    return partial(httpx.Client, base_url="https://sentry.io/api/0", timeout=timeout,
+                   headers={"Authorization": f"Bearer {cfg.sentry_auth_token}"})
+
+
+def datadog_client(cfg: Settings, timeout: float = 20) -> ClientFactory:
+    return partial(httpx.Client, base_url=f"https://api.{cfg.datadog_site}", timeout=timeout,
+                   headers={"DD-API-KEY": cfg.datadog_api_key, "DD-APPLICATION-KEY": cfg.datadog_app_key})
+
+
+def list_datadog_incidents(new_client: ClientFactory) -> list[dict[str, Any]]:
+    """Every incident in the account, raw, fetched page by page."""
+    def page(offset: int) -> list[dict[str, Any]]:
+        return _get(new_client, "datadog", "/api/v2/incidents",
+                    **{"page[size]": DATADOG_PAGE_SIZE, "page[offset]": offset}).get("data", [])
+
+    return collect_pages(page, DATADOG_PAGE_SIZE)
+
+
 def incident_view(raw: dict[str, Any]) -> dict[str, Any]:
     attrs = raw["attributes"]
     fields = attrs.get("fields") or {}
@@ -62,12 +81,9 @@ def sentry_issue_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 class LiveApps:
     def __init__(self, cfg: Settings, user_id: str) -> None:
         self.cfg, self.user_id = cfg, user_id
-        self.sentry: ClientFactory = partial(httpx.Client, base_url="https://sentry.io/api/0", timeout=20,
-                                             headers={"Authorization": f"Bearer {cfg.sentry_auth_token}"})
+        self.sentry = sentry_client(cfg)
         self.sentry_project_id = urlparse(cfg.sentry_dsn).path.strip("/")
-        self.datadog: ClientFactory = partial(httpx.Client, base_url=f"https://api.{cfg.datadog_site}", timeout=20,
-                                              headers={"DD-API-KEY": cfg.datadog_api_key,
-                                                       "DD-APPLICATION-KEY": cfg.datadog_app_key})
+        self.datadog = datadog_client(cfg)
         self.stripe = stripe_client(cfg)
         self.mixpanel = MixpanelClient(cfg.mixpanel_project_token, cfg.mixpanel_project_id,
                                        cfg.mixpanel_service_account_user, cfg.mixpanel_service_account_secret,
@@ -139,11 +155,7 @@ class LiveApps:
         }
 
     def _incidents(self) -> list[dict[str, Any]]:
-        def page(offset: int) -> list[dict[str, Any]]:
-            return _get(self.datadog, "datadog", "/api/v2/incidents",
-                        **{"page[size]": DATADOG_PAGE_SIZE, "page[offset]": offset})["data"]
-
-        return [incident_view(i) for i in collect_pages(page, DATADOG_PAGE_SIZE)]
+        return [incident_view(i) for i in list_datadog_incidents(self.datadog)]
 
     def datadog_find_incidents(self, region: str | None, since: str, until: str) -> list[dict[str, Any]]:
         keys = ("id", "title", "region", "severity", "start", "end")
