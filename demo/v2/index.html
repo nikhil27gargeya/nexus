@@ -1,0 +1,762 @@
+<title>Nexus Demo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap">
+<style>
+:root{
+  --ground:#EDF0ED; --surface:#FFFFFF; --panel:#F6F8F6; --ink:#17201C; --ink-2:#4A5752; --ink-3:#7A8681;
+  --line:#D3DAD6; --nexus:#1F5F5B; --nexus-soft:#DCEBE8; --evidence:#9A5710; --evidence-soft:#F5E8D5;
+  --pass:#2E7A4B; --pass-soft:#DDEFE3; --fail:#B0442E; --fail-soft:#F6E1DB; --mergeline:#434DBE; --mergeline-soft:#E6E7F7; --on-mergeline:#FFFFFF;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1311; --surface:#171C1A; --panel:#1B221F; --ink:#E3E9E6; --ink-2:#A9B4AF; --ink-3:#75817C;
+    --line:#2C3531; --nexus:#72C1B6; --nexus-soft:#1D3330; --evidence:#E1A55C; --evidence-soft:#3A2C1B;
+    --pass:#6CC08D; --pass-soft:#1C3325; --fail:#E3826C; --fail-soft:#3A221C; --mergeline:#9CA3F3; --mergeline-soft:#262A4A; --on-mergeline:#12143A;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1311; --surface:#171C1A; --panel:#1B221F; --ink:#E3E9E6; --ink-2:#A9B4AF; --ink-3:#75817C;
+  --line:#2C3531; --nexus:#72C1B6; --nexus-soft:#1D3330; --evidence:#E1A55C; --evidence-soft:#3A2C1B;
+  --pass:#6CC08D; --pass-soft:#1C3325; --fail:#E3826C; --fail-soft:#3A221C; --mergeline:#9CA3F3; --mergeline-soft:#262A4A; --on-mergeline:#12143A;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ground);color:var(--ink);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default}
+:focus-visible{outline:3px solid var(--nexus);outline-offset:4px}
+button,input,select{ -webkit-tap-highlight-color:var(--nexus-soft)}
+h1,h2,h3,p{margin:0}
+button{touch-action:manipulation}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.wrap{max-width:1640px;height:100svh;min-height:720px;margin:auto;padding:16px 28px 10px;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:14px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:20px;min-width:0}
+.brand{display:flex;align-items:center;gap:18px;min-width:0}
+.brand h1{font-size:29px;letter-spacing:-1.3px;font-weight:600;color:var(--nexus)}
+.brand p{font-size:14px;color:var(--ink-2);white-space:nowrap;letter-spacing:-.2px}
+.controls{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.accounts{display:flex;padding:3px;background:var(--panel);border:1px solid var(--line);border-radius:9px}
+.acct{border:0;border-radius:6px;background:var(--panel);color:var(--ink-2);padding:8px 11px;font-size:14px;white-space:nowrap}
+.acct[aria-pressed="true"]{background:var(--nexus-soft);color:var(--nexus);box-shadow:inset 0 0 0 1px var(--nexus)}
+.small-btn{border:1px solid var(--line);border-radius:7px;background:var(--surface);padding:9px 11px;font-size:13px;white-space:nowrap}
+.small-btn:hover,.small-btn[aria-expanded="true"]{background:var(--nexus-soft);border-color:var(--nexus)}
+.toggle{display:flex;gap:7px;align-items:center;cursor:pointer;font-size:13px;white-space:nowrap;color:var(--ink-2)}
+.toggle input{appearance:none;width:29px;height:17px;margin:0;border:1px solid var(--ink-3);border-radius:12px;background:var(--panel);position:relative;cursor:pointer;flex-shrink:0}
+.toggle input:before{content:"";position:absolute;width:11px;height:11px;left:2px;top:2px;border-radius:50%;background:var(--ink-3);transition:transform .2s}
+.toggle input:checked{background:var(--nexus-soft);border-color:var(--nexus)}
+.toggle input:checked:before{background:var(--nexus);transform:translateX(12px)}
+.stage{display:grid;grid-template-columns:minmax(0,45fr) minmax(0,55fr);gap:28px;border-top:1px solid var(--line);padding-top:16px;min-height:0}
+.mergeline,.brain{min-width:0;min-height:0}
+.stage>.brain{border-left:1px solid var(--line);padding-left:28px;margin-left:-14px}
+@media(max-width:960px){.stage>.brain{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--line);padding-top:24px}}
+.mergeline{display:flex;flex-direction:column;gap:12px}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-height:30px}
+.section-head h2{font-size:22px;font-weight:500;letter-spacing:-.5px}
+.eyebrow{font-family:var(--sans);font-size:14px;letter-spacing:-.1px;font-weight:600;color:var(--ink-2)}
+.section-note{font-size:12px;color:var(--ink-2)}
+.frame{position:relative;isolation:isolate;flex:1;min-height:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;box-shadow:0 8px 24px -18px var(--ink-3);display:flex;flex-direction:column}
+.chrome{display:flex;align-items:center;gap:14px;padding:11px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+.dots{display:flex;gap:5px}.dots i{display:block;width:7px;height:7px;border-radius:50%;background:var(--line)}
+.url{font:11px var(--mono);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app{display:grid;grid-template-columns:136px minmax(0,1fr);flex:1;min-height:0}
+.nav{display:flex;flex-direction:column;gap:4px;padding:24px 10px;border-right:1px solid var(--line);font-size:13px;background:var(--panel)}
+.nav b{font-size:17px;color:var(--mergeline);font-weight:600;letter-spacing:-.3px;padding:0 10px;margin-bottom:22px;min-width:0;overflow-wrap:anywhere}
+.nav span{padding:8px 10px;color:var(--ink-2);border-radius:5px}
+.nav .on{background:var(--mergeline-soft);color:var(--mergeline);font-weight:500}
+.nav .nav-bottom{margin-top:auto;font:11px var(--mono);color:var(--ink-3)}
+.content{min-width:0;display:flex;flex-direction:column;padding:29px 24px;gap:24px}
+.content h3{font-size:25px;letter-spacing:-.6px;font-weight:500}
+.workspace{font-size:14px;color:var(--ink-2);margin-top:4px}
+.plan{border:1px solid var(--line);border-top:3px solid var(--mergeline);border-radius:8px;padding:20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.plan strong{font-size:18px;font-weight:500}.plan small{display:block;color:var(--ink-2);font-size:12px;margin-top:5px}
+.price{font-size:32px;font-weight:500;letter-spacing:-1.8px;white-space:nowrap}.price span{font:14px var(--sans);color:var(--ink-2);letter-spacing:0}
+.rows{display:grid;grid-template-columns:auto minmax(0,1fr);gap:15px 16px;margin:0;font-size:13px}
+.rows dt{color:var(--ink-2)}.rows dd{margin:0;text-align:right;overflow-wrap:anywhere}
+.billing-actions{border-top:1px solid var(--line);padding-top:22px}
+.btn{border:1px solid var(--line);border-radius:7px;background:var(--surface);padding:12px 14px;font-weight:500;font-size:14px;min-height:46px}
+.btn:hover{background:var(--panel);border-color:var(--ink-2)}
+.cancel-trigger{color:var(--fail)}
+.cancel-trigger:disabled{color:var(--ink-2);opacity:.65;cursor:progress}
+.billing-note{margin-top:auto;font-size:12px;color:var(--ink-3)}
+.overlay{position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:18px;background:color-mix(in srgb,var(--ink) 28%,transparent);backdrop-filter:blur(3px)}
+.sheet{width:100%;max-width:520px;max-height:100%;overflow-y:auto;overscroll-behavior:contain;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:25px;display:flex;flex-direction:column;gap:15px;box-shadow:0 18px 45px -20px var(--ink-2);animation:reveal .35s ease both}
+.sheet:focus,.sheet:focus-visible{outline:none}
+.sheet h3{font-size:24px;line-height:1.2;letter-spacing:-.5px;font-weight:500}
+.sheet .customer-brand{color:var(--mergeline);font-size:13px;letter-spacing:1.8px;text-transform:uppercase;font-weight:500}
+.remediation h3{font:500 36px/1.04 var(--serif);letter-spacing:-.75px;text-wrap:balance}
+.letter{font-size:15px;line-height:1.55;color:var(--ink-2)}
+.proof{list-style:none;margin:0;padding:10px 0;border-block:1px solid var(--line);display:grid;gap:3px}
+.proof button{display:flex;align-items:baseline;gap:9px;width:100%;text-align:left;border:0;border-radius:4px;background:var(--surface);padding:5px 2px;font-size:14px;color:var(--ink-2)}
+.proof button:before{content:"↗";color:var(--evidence);font-family:var(--mono);flex-shrink:0}
+.proof button:hover,.proof button:focus-visible{background:var(--evidence-soft);color:var(--ink)}
+.fixedline{font-size:14px;font-weight:500;color:var(--pass)}
+.credit{display:block;padding:12px 14px;background:var(--mergeline-soft);border-radius:7px;font-size:14px;line-height:1.5;color:var(--ink)}
+.credit b{display:inline;white-space:nowrap;font-weight:600}
+.modal-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.modal-actions .btn{width:100%;height:100%;border-color:var(--ink-2);background:var(--surface);color:var(--ink);padding:12px 8px;font-size:14px;line-height:1.3}
+.modal-actions .btn:hover{background:var(--panel);border-color:var(--ink)}
+.receipt{font-size:12px;line-height:1.7;color:var(--ink-3);border-top:1px solid var(--line);padding-top:10px;overflow-wrap:anywhere}
+.confirm-copy{font-size:15px;color:var(--ink-2);line-height:1.6}
+.brain{display:flex;flex-direction:column;gap:12px}
+.live-label{font:11px var(--mono);color:var(--nexus);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.live-label:before{content:"";width:6px;height:6px;background:var(--nexus);border-radius:50%}
+.scoper{font-size:14px;color:var(--ink-2);display:flex;align-items:center;gap:8px;min-height:20px}
+.scoper .status{flex-shrink:0}
+.trace{position:relative;margin-left:auto;font-size:12px}
+.trace summary{cursor:pointer;color:var(--nexus);font-family:var(--mono);list-style:none;white-space:nowrap}
+.trace summary::-webkit-details-marker{display:none}
+.trace ol{position:absolute;right:0;top:22px;z-index:6;width:min(560px,90vw);max-height:340px;overflow:auto;margin:0;padding:10px 14px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:9px;box-shadow:0 16px 40px -20px var(--ink-2);display:grid;gap:6px}
+.trace li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;font-size:12px;color:var(--ink-2)}
+.trace li b{font-family:var(--mono);font-weight:500;color:var(--ink)}
+.trace li span:first-child{font-family:var(--mono);color:var(--ink-3)}
+.status{display:inline-block;width:7px;height:7px;background:var(--line);border-radius:50%;white-space:nowrap;flex-shrink:0}
+[data-state="running"]>.status,[data-state="running"] .tile-head .status{background:var(--nexus);animation:pulse .8s ease infinite}
+[data-state="done"]>.status,[data-state="done"] .tile-head .status{background:var(--nexus)}
+.tiles{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.22fr);gap:10px}
+.tile{min-width:0;height:180px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:9px;padding:15px;background:var(--surface);transition:border-color .2s,box-shadow .2s,background .2s}
+.tile[data-state="running"]{border-color:var(--nexus)}
+.tile.highlight{border-color:var(--evidence);background:var(--evidence-soft);box-shadow:0 0 0 3px var(--evidence-soft)}
+.tile-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tile{cursor:pointer}
+.tile:hover{border-color:var(--nexus)}
+.tile .tile-head h3::after{content:" ↗";color:var(--ink-3)}
+.tile h3{font-size:16px;font-weight:500;letter-spacing:-.2px}
+.tile-data{display:flex;flex:1;min-height:0;flex-direction:column;padding-top:14px}
+.big{font-size:42px;line-height:1;letter-spacing:-1.6px;font-weight:500;font-variant-numeric:tabular-nums}
+.source-line{font-size:14px;color:var(--ink-2);margin-top:8px;line-height:1.3}
+.evidence-id{font:10px/1.5 var(--mono);color:var(--evidence);margin-top:auto;overflow-wrap:anywhere}
+.tile[data-state="idle"] .big{color:var(--line)}
+.tile[data-state="done"] .tile-data{animation:fade .3s ease both}
+.spark{width:100%;height:60px;display:block;margin:2px 0;overflow:visible}
+.spark .area{fill:var(--nexus-soft)}
+.spark .line{fill:none;stroke:var(--nexus);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.spark .base{stroke:var(--ink-3);stroke-dasharray:4 4;stroke-width:1;fill:none}
+.spark .incident{stroke:var(--evidence);stroke-width:1.2;fill:none}
+.spark .grid{stroke:var(--line);stroke-width:1;fill:none}
+.spark text{font:10px var(--mono);fill:var(--ink-2)}
+.spark .incident-label{fill:var(--evidence)}
+.spark .dot{fill:var(--nexus);stroke:var(--surface);stroke-width:2}
+.mixpanel .tile-data{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:14px}
+.mixpanel .big{grid-column:1;grid-row:1}.mixpanel .source-line{grid-column:1;grid-row:2;max-width:12ch}
+.mixpanel .spark{grid-column:2;grid-row:1/4;height:112px;margin:0;align-self:center}
+.mixpanel .evidence-id{grid-column:1/-1;grid-row:3;align-self:end}
+.gate-block{display:flex;flex-direction:column}
+.gate-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.gate-heading span:last-child{font-size:11px;color:var(--ink-3)}
+.gates{list-style:none;padding:0;margin:0}
+.gates li{display:grid;grid-template-columns:23px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:31px;border-bottom:1px solid var(--line);font-size:14px;transition:background .15s}
+.gates li:last-child{border:0}
+.gates li:has(details){display:block;min-height:0}
+.gates details summary{display:grid;grid-template-columns:23px minmax(0,1fr) auto 14px;align-items:center;gap:10px;min-height:31px;cursor:pointer;list-style:none}
+.gates details summary::-webkit-details-marker{display:none}
+.gates details summary::after{content:"⌄";color:var(--ink-2);font-size:15px;line-height:1;transition:transform .15s}
+.gates details[open] summary::after{transform:rotate(180deg)}
+.gates details.empty summary{cursor:default}.gates details.empty summary::after{content:""}
+.gates details summary:hover .gate-name{color:var(--nexus)}
+.gate-detail{margin:2px 0 8px 33px;padding:8px 12px;border-left:2px solid var(--line);font-size:13px;color:var(--ink-2);max-height:132px;overflow:auto}
+.gate-detail ul{margin:0;padding-left:16px;display:grid;gap:3px}.gate-detail p{margin:0}
+.gates .gate-detail li{display:list-item;min-height:0;border:0;padding:0;font-size:13px}
+.gate-detail b{color:var(--ink);font-weight:600}.gate-detail code{font-family:var(--sans);font-size:13px;font-weight:500}
+.mark{display:grid;place-items:center;width:21px;height:21px;font:11px var(--mono);color:var(--ink-3);border-radius:50%;background:var(--panel)}
+.gate-name{font-weight:500}.why{font-size:14px;color:var(--ink-2);text-align:right}
+.gates [data-r="wait"] .gate-name,.gates [data-r="skip"] .gate-name,.gates [data-r="skip"] .why{color:var(--ink-3);font-weight:400}
+.gates [data-r="pass"] .mark{color:var(--pass);background:var(--pass-soft)}
+.gates [data-r="fail"] .mark{color:var(--fail);background:var(--fail-soft)}
+.gates [data-r="fail"] .why{color:var(--fail)}
+.verdict{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:12px 18px;min-height:72px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.verdict strong{font-size:25px;line-height:1.15;font-weight:500;letter-spacing:-.65px}
+.verdict p{font-size:13px;color:var(--ink-2)}
+.verdict[data-v="yes"]{border-color:var(--pass);background:var(--pass-soft)}
+.verdict[data-v="yes"] strong{color:var(--pass)}
+.verdict[data-v="no"]{border-color:var(--nexus);background:var(--nexus-soft)}
+.verdict[data-v="no"] strong{color:var(--nexus)}
+.verdict[data-v=""] strong{font-size:23px;color:var(--ink-2)}
+.ghost-space{min-height:0}
+.ghost{position:relative;border:1px dashed var(--ink-3);border-radius:9px;padding:10px 16px 12px;background:var(--panel);display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 16px;animation:reveal .4s ease both}
+.ghost-top{grid-column:1/-1;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.ghost-label{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-2)}
+.unsent{font:10px var(--mono);color:var(--ink-3);white-space:nowrap}
+.ghost blockquote{margin:0;font:italic 19px/1.2 var(--serif);color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:var(--ink-3)}
+.stamp{width:max-content;max-width:100%;font:500 11px/1.3 var(--mono);color:var(--nexus);padding:5px 8px;border:1px solid var(--nexus);border-radius:3px;background:var(--nexus-soft);transform:rotate(-2deg);align-self:center;white-space:nowrap}
+.footer{display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--ink-3);font-size:11px}
+.shortcuts{display:flex;gap:14px;align-items:center}.shortcuts span{white-space:nowrap}kbd{font:10px var(--mono);color:var(--ink-2);padding:1px 4px;border:1px solid var(--line);border-radius:3px;background:var(--panel);margin-right:4px}
+.stage.customer{grid-template-columns:minmax(0,1fr)}
+.stage.customer .brain{display:none}
+.stage.customer .mergeline{width:100%;max-width:650px;margin:auto;height:100%}
+@keyframes reveal{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fade{from{opacity:.25}to{opacity:1}}
+@keyframes pulse{50%{opacity:.3}}
+@media(min-width:961px) and (max-width:1330px){.brand{align-items:flex-start;gap:3px;flex-direction:column}.brand p{font-size:12px}.controls{gap:8px}.acct{padding-inline:8px}.content{padding:24px 18px}.app{grid-template-columns:124px minmax(0,1fr)}.sheet{padding:20px;gap:13px}.remediation h3{font-size:32px}.tile{padding:12px}.why{font-size:13px}.verdict strong{font-size:24px}.stage{gap:22px}}
+@media(max-width:960px){.wrap{height:auto;min-height:100svh;padding:20px;gap:20px}.top{flex-wrap:wrap;gap:16px}.brand p{white-space:normal}.controls{flex-wrap:wrap}.stage{grid-template-columns:minmax(0,1fr);gap:30px}.frame{min-height:710px}.brain{gap:14px}.gate-block{min-height:205px}.ghost-space:has(.ghost[hidden]){display:none}.tile{height:228px}.spark{height:99px}.stage.customer .mergeline{height:auto}.section-head h2{font-size:24px}.footer{flex-wrap:wrap}}
+@media(max-width:560px){.wrap{padding:18px 16px 14px}.brand{align-items:flex-start;gap:6px;flex-direction:column}.brand p{font-size:14px;max-width:35ch}.controls{gap:12px}.toggle{font-size:12px}.accounts{width:100%}.acct{flex:1;padding-inline:10px}.top{gap:16px}.stage{padding-top:20px}.section-note{font-size:11px}.section-head h2{font-size:22px}.frame{min-height:780px}.app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr}.nav{flex-direction:row;align-items:center;gap:4px;border-right:0;border-bottom:1px solid var(--line);padding:12px}.nav b{margin:0 auto 0 0;padding:0 5px;font-size:19px}.nav span{padding:5px 8px}.nav span:not(.on){display:none}.content{padding:24px;gap:25px}.plan{padding:18px}.overlay{padding:12px}.sheet{padding:20px;gap:14px}.remediation h3{font-size:33px}.letter{font-size:14px}.proof button,.fixedline{font-size:13px}.modal-actions{gap:8px}.modal-actions .btn{font-size:13px;min-height:52px}.tiles{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tile{height:190px;padding:16px}.mixpanel{grid-column:1/-1;height:220px}.mixpanel .tile-data{display:grid;grid-template-columns:90px minmax(0,1fr);grid-template-rows:auto 1fr auto;column-gap:14px}.mixpanel .big{grid-column:1;align-self:end;font-size:40px}.mixpanel .source-line{grid-column:1}.mixpanel .spark{grid-column:2;grid-row:1/3;height:125px;margin:0;align-self:center}.mixpanel .evidence-id{grid-column:1/-1}.gate-block{min-height:265px}.gates li{grid-template-columns:22px minmax(0,1fr);gap:0 10px;padding:6px 0;min-height:48px}.why{grid-column:2;text-align:left;font-size:13px}.gate-name{font-size:14px}.mark{grid-row:1/3}.verdict{padding:16px;min-height:101px}.verdict strong{font-size:27px}.ghost{padding:15px;gap:10px}.ghost blockquote{font-size:22px}.ghost-space{min-height:145px}.stamp{font-size:10px}.shortcuts{gap:10px}.footer{gap:10px}}
+@media(max-width:960px){.controls{width:100%;min-width:0;flex-shrink:1}}
+@media(max-width:560px){.ghost{grid-template-columns:minmax(0,1fr)}.stamp{justify-self:end;white-space:normal}.section-head{flex-wrap:wrap;gap:3px 12px}.section-note{min-width:0}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.stamp{transform:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Nexus</h1><p>Remediation based observability</p></div>
+    <div class="controls">
+      <div class="accounts" role="group" aria-label="Customer account">
+        <button id="account-fathom" class="acct" data-key="fathom" aria-pressed="true" aria-keyshortcuts="1">Fathom</button>
+        <button id="account-quanta" class="acct" data-key="quanta" aria-pressed="false" aria-keyshortcuts="2">Quanta</button>
+      </div>
+      <label class="toggle" for="liveMode"><input type="checkbox" id="liveMode" role="switch">Live agent</label>
+      <label class="toggle" for="custView"><input type="checkbox" id="custView" role="switch" aria-controls="presenter">Customer view</label>
+    </div>
+  </header>
+  <main class="stage" id="stage">
+    <section class="mergeline" aria-labelledby="customer-heading">
+      <div class="section-head"><h2 id="customer-heading">What the customer sees</h2><span class="section-note">Mergeline · a fictional tool that syncs data between business apps</span></div>
+      <div class="frame" id="mergeline-frame">
+        <div class="chrome"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="url">app.mergeline.io/settings/billing</div></div>
+        <div class="app" id="mergeline-app">
+          <nav class="nav" aria-label="Mergeline"><b>Mergeline</b><span>Projects</span><span>Sync rules</span><span>Members</span><span class="on" aria-current="page">Billing</span><span class="nav-bottom">Workspace</span></nav>
+          <div class="content">
+            <div><h3>Billing</h3><p class="workspace" id="workspace"></p></div>
+            <div class="plan"><div><strong>Pro plan</strong><small>Renews Apr 13, 2026</small></div><div class="price">$30<span> /mo</span></div></div>
+            <dl class="rows"><dt>Payment</dt><dd>Visa ending 4417</dd><dt>Invoices</dt><dd>12 paid · all up to date</dd><dt>Team members</dt><dd id="seats"></dd></dl>
+            <div class="billing-actions"><button class="btn cancel-trigger" id="cancelBtn" aria-keyshortcuts="Enter">Cancel subscription</button></div>
+            <p class="billing-note">Your workspace. Your decision.</p>
+          </div>
+        </div>
+        <div class="overlay" id="overlay" hidden></div>
+      </div>
+    </section>
+    <section class="brain" id="presenter" aria-labelledby="presenter-heading">
+      <div class="section-head"><h2 id="presenter-heading">What Nexus sees</h2></div>
+      <div class="scoper" id="scoper" data-state="idle"><span class="status" aria-hidden="true"></span><span id="scope">Waiting for a cancellation.</span><details class="trace" id="traceBox" hidden><summary id="traceSummary">Agent steps · 0</summary><ol id="trace"></ol></details></div>
+      <div class="tiles">
+        <article class="tile" id="sentry" data-state="idle" aria-label="Sentry evidence"><div class="tile-head"><h3>Sentry</h3><span class="status" role="img" aria-label="Waiting"></span></div><div class="tile-data" id="sentry-data"></div></article>
+        <article class="tile" id="datadog" data-state="idle" aria-label="Datadog evidence"><div class="tile-head"><h3>Datadog</h3><span class="status" role="img" aria-label="Waiting"></span></div><div class="tile-data" id="datadog-data"></div></article>
+        <article class="tile mixpanel" id="mixpanel" data-state="idle" aria-label="Mixpanel evidence"><div class="tile-head"><h3>Mixpanel</h3><span class="status" role="img" aria-label="Waiting"></span></div><div class="tile-data" id="mixpanel-data"></div></article>
+      </div>
+      <div class="gate-block"><div class="gate-heading"><span class="eyebrow">Five checks for remediation</span><span id="gate-progress">Waiting</span></div><ol class="gates" id="gates" aria-label="Evidence gates"></ol></div>
+      <div class="verdict" id="verdict" data-v="" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div class="ghost-space"><aside class="ghost" id="ghost" aria-label="Blocked naive message" hidden>
+        <div class="ghost-top"><span class="ghost-label">A naive retention bot would send</span><span class="unsent">NEVER SENT</span></div>
+        <blockquote>“We're sorry for any inconvenience you may have experienced… here's 20% off.”</blockquote>
+        <span class="stamp" id="ghost-stamp">Blocked — no evidence of harm</span>
+      </aside></div>
+    </section>
+  </main>
+  <footer class="footer"><span id="footnote">Prototype · simulated data · no models called</span><div class="shortcuts" aria-label="Presenter keyboard shortcuts"><span><kbd>Enter</kbd> cancel</span><span><kbd>R</kbd> reset</span><span><kbd>1</kbd><kbd>2</kbd> accounts</span></div></footer>
+</div>
+
+<script>
+(() => {
+  const DAY = 864e5;
+  const d = s => new Date(s + "T00:00:00Z");
+  const fmt = dt => dt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  const WEEKS = ["2026-01-16","2026-01-23","2026-01-30","2026-02-06","2026-02-13","2026-02-20","2026-02-27","2026-03-06"].map(d);
+  const CANCEL = d("2026-03-13");
+  const INCIDENT = { id: "INC-2291", title: "Sync jobs timing out", region: "us-east-1", date: "2026-03-03", hours: "09:10–14:40 UTC", fix: { release: "v4.12", afterDays: 2 } };
+  const fixDate = inc => new Date(inc.getTime() + INCIDENT.fix.afterDays * DAY);
+  const OFFER = { percent: 20, months: 3 }; // mirrors backend/config/business.toml [standard_offer]
+
+  const SCENARIOS = [
+    { key: "fathom", name: "Fathom", id: "u_4812", region: "us-east-1", seats: 6,
+      errors: [{ id: "SNTRY-8841", type: "SyncTimeoutError", count: 31, date: "2026-03-03", linked: true },
+               { id: "SNTRY-8790", type: "WebhookRetryExceeded", count: 16, date: "2026-02-18" }],
+      weekly: [5, 6, 5, 5, 6, 5, 5, 1] },
+    { key: "quanta", name: "Quanta", id: "u_2291", region: "ap-southeast-2", seats: 3,
+      errors: [],
+      weekly: [5, 5, 4, 4, 3, 3, 2, 2] },
+    { key: "tally", name: "Tally", id: "u_7730", region: "eu-west-1", seats: 9,
+      errors: [{ id: "SNTRY-8602", type: "ExportRenderWarning", count: 42, date: "2026-02-20" }],
+      weekly: [4, 4, 5, 4, 4, 4, 5, 4] },
+    { key: "canvasly", name: "Canvasly", id: "u_5104", region: "eu-west-1", seats: 4,
+      errors: [{ id: "SNTRY-8815", type: "AvatarUploadFailed", count: 2, date: "2026-02-25" }],
+      weekly: [6, 6, 5, 6, 6, 6, 1, 0] },
+  ];
+
+
+  const $ = id => document.getElementById(id);
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+  const sleep = ms => reduce.matches ? Promise.resolve() : new Promise(resolve => setTimeout(resolve, ms));
+  let current, edits, runToken = 0, phase = "idle", lastResult = null, highlightTimer;
+  function world() {
+    const s = current;
+    const incDate = new Date(d(INCIDENT.date).getTime() + edits.shift * DAY);
+    const errors = s.errors.map(e => {
+      const x = { ...e, date: e.linked ? incDate : d(e.date) };
+      if (e.linked) x.count = edits.errs;
+      return x;
+    });
+    return { s, region: edits.region, incDate, errors, active: true, cancel: CANCEL };
+  }
+
+  /* ---------- the logic Nexus runs (gates are code) ---------- */
+  function judge(w) {
+    const exposed = w.active !== false && w.region === INCIDENT.region && w.incDate >= WEEKS[0] && w.incDate <= (w.cancel || CANCEL);
+    const heavy = w.errors.filter(e => e.count >= 10);
+    const harmDates = [...(exposed ? [w.incDate] : []), ...heavy.map(e => e.date)];
+    const harm = harmDates.length > 0;
+
+    const v = w.s.weekly;
+    const baseline = v.slice(0, 4).reduce((a, b) => a + b, 0) / 4;
+    let fallIdx = 1, fall = -Infinity;
+    for (let i = 1; i < v.length; i++) if (v[i - 1] - v[i] > fall) { fall = v[i - 1] - v[i]; fallIdx = i; }
+    const fallPct = Math.max(0, fall) / baseline;
+    const cliff = fallPct >= 0.5;
+    const dropStart = WEEKS[fallIdx];
+
+    // Harm must precede the drop by 1–14 days; pick the harm closest before the drop.
+    const gaps = harmDates.map(t => (dropStart - t) / DAY);
+    const before = gaps.filter(g => g > 0);
+    const gap = before.length ? Math.min(...before) : (gaps.length ? Math.max(...gaps) : null);
+    const first = harm && cliff && gap > 0 && gap <= 14;
+    const onset = gap !== null ? new Date(dropStart.getTime() - gap * DAY) : null;
+
+    const cited = [...(exposed ? [INCIDENT.id] : []), ...heavy.map(e => e.id), ...(cliff ? ["MXP-" + fallIdx] : [])];
+    let conf = 0.12;
+    if (harm) {
+      conf = 0.35 + (exposed ? 0.2 : 0) + (heavy.length ? 0.15 : 0) + (first ? 0.15 : 0) + Math.min(fallPct, 1) * 0.15 - (cliff ? 0 : 0.25);
+      conf = Math.max(0.05, Math.min(0.97, conf));
+    }
+    const recent = v.slice(fallIdx).reduce((a, b) => a + b, 0) / (v.length - fallIdx);
+
+    const gates = [
+      { name: "Every citation is real", sub: "Each evidence ID the verdict cites exists in fetched data", pass: true, why: cited.length ? `${cited.length}/${cited.length} resolve` : "nothing cited" },
+      { name: "Harm exists", sub: "≥10 errors on the account, or inside an incident's region and window", pass: harm, why: harm ? (exposed ? `inside ${INCIDENT.id}` : `${heavy[0].count} × ${heavy[0].type}`) : "no qualifying harm" },
+      { name: "Harm came first", sub: "Harm began within 14 days before the usage drop", pass: first, why: !harm ? "no harm to order" : !cliff ? "no drop to order" : gap <= 0 ? `harm ${-gap}d after drop` : gap > 14 ? `${gap}d gap, too far` : `${gap}d before drop` },
+      { name: "Usage fell off a cliff", sub: "One week fell ≥50% of their own baseline", pass: cliff, why: `largest weekly fall −${Math.round(fallPct * 100)}%` },
+      { name: "Confidence ≥ 0.75", sub: "Adjudge's own confidence clears the bar in config", pass: conf >= 0.75, why: conf.toFixed(2) },
+    ];
+    const yes = gates.every(g => g.pass);
+    const firstFail = gates.find(g => !g.pass);
+    return { exposed, heavy, harm, onset, baseline, recent, fallIdx, fallPct, cliff, dropStart, gates, yes, firstFail, conf,
+      verdict: yes ? "causal_harm" : (!harm ? "no_harm" : "insufficient_evidence") };
+  }
+
+
+  // The fixture and judge above are unchanged. Only their presentation short-circuits.
+  const sources = ["sentry", "datadog", "mixpanel"];
+  const gateNames = ["Every claim points to real data", "This customer hit the failure", "It was a confirmed outage in their region", "It broke something they depend on", "The evidence is strong enough"];
+  const esc = s => String(s).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+  const setSource = (id, state) => {
+    $(id).dataset.state = state;
+    $(id).querySelector(".status").setAttribute("aria-label", {idle:"Waiting", running:"Checking", done:"Complete"}[state]);
+  };
+  function sparkline(w, r) {
+    const v = w.s.weekly, x0 = 17, x1 = 235, y0 = 20, y1 = 89;
+    const xDate = date => x0 + (date - WEEKS[0]) / (CANCEL - WEEKS[0]) * (x1 - x0);
+    const y = n => y1 - n / 7 * (y1 - y0);
+    const points = v.map((n, i) => `${xDate(WEEKS[i]).toFixed(1)},${y(n).toFixed(1)}`);
+    const line = "M" + points.join(" L");
+    const endX = xDate(WEEKS[v.length - 1]);
+    const ix = Math.max(x0, Math.min(x1, xDate(w.incDate)));
+    const incidentLabel = `${fmt(w.incDate)}${w.incDate > CANCEL ? " →" : ""}`;
+    return `<svg class="spark" viewBox="0 0 250 111" role="img" aria-label="Weekly active days: ${v.join(", ")}. Dashed baseline ${r.baseline.toFixed(2)} days. Incident ${fmt(w.incDate)}${w.incDate > CANCEL ? ", beyond the cancellation window" : ""}.">
+      <line class="grid" x1="${x0}" x2="${x1}" y1="${y1}" y2="${y1}"/>
+      <text x="2" y="${y0 + 3}">7</text><text x="2" y="${y1 + 3}">0</text>
+      <path class="area" d="${line} L${endX},${y1} L${x0},${y1} Z"/>
+      <line class="base" x1="${x0}" x2="${x1}" y1="${y(r.baseline)}" y2="${y(r.baseline)}"/>
+      <line class="incident" x1="${ix}" x2="${ix}" y1="${y0 - 3}" y2="${y1}"/>
+      <text class="incident-label" x="${Math.min(ix, x1 - 6)}" y="12" text-anchor="end">${incidentLabel}</text>
+      <path class="line" d="${line}"/><circle class="dot" cx="${endX}" cy="${y(v[v.length - 1])}" r="3.5"/>
+      <text x="${x0}" y="107">Jan 16</text><text x="${x1}" y="107" text-anchor="end">Mar 13</text></svg>`;
+  }
+  function renderSource(id, w, r) {
+    let number, line, evidence;
+    if (id === "sentry") {
+      const e = w.errors.find(e => e.linked) || w.errors[0];
+      number = e ? e.count : 0;
+      line = e ? `${e.linked ? "failed syncs" : e.type === "ExportRenderWarning" ? "export warnings" : "upload failures"} · ${fmt(e.date)}` : "errors on this account";
+      // Keep secondary fetched evidence available to explain every citation, without another tile.
+      const ids = w.errors.map(e => e.id);
+      evidence = ids.length ? ids.join(" · ") : "No Sentry evidence";
+      $(id).title = w.errors.map(e => `${e.id}: ${e.count} ${e.type}, ${fmt(e.date)}`).join("\n");
+    } else if (id === "datadog") {
+      number = r.exposed ? 1 : 0;
+      line = r.exposed ? "outage in their region" : w.region !== INCIDENT.region ? "outages in their region" : "outages in this window";
+      evidence = r.exposed ? INCIDENT.id : `${INCIDENT.id} · ${w.region !== INCIDENT.region ? INCIDENT.region + " only" : "outside window"}`;
+      $(id).title = `${INCIDENT.id}: ${fmt(w.incDate)}, ${INCIDENT.hours}, ${INCIDENT.region}. ${r.exposed ? "Account exposed." : "Account not exposed."}`;
+    } else {
+      number = `−${Math.round(r.fallPct * 100)}%`;
+      line = "largest weekly usage fall";
+      evidence = `MXP-${r.fallIdx} · active days / week`;
+    }
+    $(`${id}-data`).innerHTML = `<div class="big">${number}</div><p class="source-line">${line}</p>${id === "mixpanel" ? sparkline(w, r) : ""}<div class="evidence-id">${evidence}</div>`;
+    setSource(id, "done");
+  }
+  function gateReason(r, i) {
+    if (i === 0) return r.gates[0].why === "nothing cited" ? "Nothing to invent" : r.gates[0].why.replace(" resolve", " verified");
+    if (i === 1) return r.harm ? (r.exposed ? "In the outage region" : `${r.heavy[0].count} recorded errors`) : "No qualifying harm";
+    if (i === 2) return r.gates[2].why.replace("d before drop", " days before drop").replace("no drop to order", "No usage cliff to explain");
+    if (i === 3) return `−${Math.round(r.fallPct * 100)}% · needs ≥50%`;
+    return `${r.conf.toFixed(2)} / 0.75`;
+  }
+  function renderGates(r, completed) {
+    const failure = r.gates.findIndex(g => !g.pass);
+    const stopped = failure >= 0 && completed > failure;
+    $("gates").innerHTML = r.gates.map((g, i) => {
+      const state = stopped && i > failure ? "skip" : i < completed ? (g.pass ? "pass" : "fail") : "wait";
+      const mark = state === "pass" ? "✓" : state === "fail" ? "✗" : state === "skip" ? "—" : i + 1;
+      const why = state === "skip" ? "not needed" : state === "wait" ? "" : gateReason(r, i);
+      return `<li id="gate-${i + 1}" data-r="${state}"><span class="mark" aria-label="${{pass:"Passed",fail:"Failed",skip:"Not needed",wait:"Waiting"}[state]}">${mark}</span><span class="gate-name">${gateNames[i]}</span><span class="why">${why}</span></li>`;
+    }).join("");
+    $("gate-progress").textContent = !completed ? "Waiting" : stopped ? `Stopped at gate ${failure + 1}` : `${completed} of 5 passed`;
+  }
+  function verdict(r) {
+    $("verdict").dataset.v = r.yes ? "yes" : "no";
+    $("verdict").dataset.code = r.verdict;
+    $("verdict").innerHTML = r.yes
+      ? `<strong>Proven: our outage caused this.</strong><p>All five gates passed. Remediation: the evidence, the fix, and a $60 credit.</p>`
+      : `<strong>No proof of harm. No remediation.</strong><p>${!r.harm ? "No harm found." : "The causal story does not hold."} Standard ${OFFER.percent}% offer, with no claim of fault.</p>`;
+  }
+  function showSheet(content, kind) {
+    $("overlay").innerHTML = `<section class="sheet ${kind}" id="customer-modal" role="dialog" aria-labelledby="modal-title" tabindex="-1">${content}</section>`;
+    $("overlay").hidden = false;
+    $("mergeline-app").inert = true;
+    // Modal scope is the Mergeline frame; presenter controls remain available.
+    $("customer-modal").focus({preventScroll:true});
+  }
+  function clearHighlight() {
+    clearTimeout(highlightTimer);
+    sources.forEach(id => $(id).classList.remove("highlight"));
+  }
+  function highlight(id, timed = false) {
+    clearHighlight();
+    $(id).classList.add("highlight");
+    if (timed) highlightTimer = setTimeout(clearHighlight, 1800);
+  }
+  function remediation(w, r) {
+    const e = w.errors.find(x => x.linked && x.count >= 10) || r.heavy.find(x => +x.date === +r.onset);
+    const parts = [];
+    if (r.exposed) parts.push(`On ${fmt(w.incDate)}, syncing in your region failed for five and a half hours.`);
+    if (e) parts.push(`Your workspace hit ${e.count} failed ${e.type === "SyncTimeoutError" ? "syncs" : "requests"} ${r.exposed && +e.date === +w.incDate ? "that day" : "on " + fmt(e.date)}, and your team has barely used Mergeline since. That's on us.`);
+    else parts.push("Your team has barely used Mergeline since. That's on us.");
+    const proof = [
+      ...(r.exposed ? [["datadog", `${fmt(w.incDate)} · 5½ hours of disrupted syncing`]] : []),
+      ...(e ? [["sentry", `${fmt(e.date)} · ${e.count} failed ${e.linked ? "syncs" : "requests"} in your workspace`]] : []),
+      ["mixpanel", `Week of ${fmt(r.dropStart)} · ${r.baseline.toFixed(1)} → ${r.recent.toFixed(1)} active days / week`]
+    ];
+    const fixed = (r.exposed || e?.linked) && fixDate(w.incDate) <= CANCEL
+      ? `<p class="fixedline">✓ Fixed on ${fmt(fixDate(w.incDate))}. No sync failures since.</p>` : "";
+    showSheet(`<span class="customer-brand">A note from Mergeline</span><h3 id="modal-title">Before you go, our systems had issues, and we want to make it right.</h3>
+      <p class="letter">${parts.join(" ")}</p>
+      <ul class="proof">${proof.map(([id, copy]) => `<li><button id="proof-${id}" data-source="${id}" title="Highlight ${id === "datadog" ? "Datadog" : id === "sentry" ? "Sentry" : "Mixpanel"} evidence">${copy}</button></li>`).join("")}</ul>
+      ${fixed}<p class="credit">We've added a <b>$60</b> credit — two months of Pro — whatever you decide.</p>
+      <div class="modal-actions"><button id="keep-credit" class="btn" data-action="kept">Keep Pro with credit</button><button id="cancel-anyway" class="btn" data-action="cancel">Cancel anyway</button></div>`, "remediation");
+    document.querySelectorAll("[data-source]").forEach(button => {
+      button.addEventListener("mouseenter", () => highlight(button.dataset.source));
+      button.addEventListener("mouseleave", clearHighlight);
+      button.addEventListener("focus", () => highlight(button.dataset.source));
+      button.addEventListener("blur", clearHighlight);
+      button.addEventListener("click", () => highlight(button.dataset.source, true));
+    });
+    wireActions();
+  }
+  function standardOffer() {
+    showSheet(`<span class="customer-brand">Before you go</span><h3 id="modal-title">Stay for ${OFFER.percent}% off</h3><p class="confirm-copy">Keep your Pro plan at ${OFFER.percent}% off for the next ${OFFER.months} months.</p><div class="modal-actions"><button id="keep-offer" class="btn" data-action="keep">Keep Pro at ${OFFER.percent}% off</button><button id="confirm-cancel" class="btn" data-action="cancel">Cancel subscription</button></div>`, "confirm");
+    wireActions();
+  }
+  async function stripeReceipt(cancelled) {
+    const body = { scenario: current.key, outcome: lastResult.yes ? "remediation" : "standard_offer",
+                   choice: cancelled ? "cancel" : "keep", incident: lastResult.incident || null };
+    try {
+      const response = await fetch("/api/actions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!response.ok) return `<p class="receipt">Stripe: ${esc((await response.json()).detail || response.status)}</p>`;
+      const results = await response.json();
+      return `<p class="receipt">${results.map(r => `${r.ok ? "✓" : "✗"} Stripe ${esc(r.kind)}: ${esc(r.detail)}${r.stripe_id ? ` · ${esc(r.stripe_id)}` : ""}`).join("<br>")}</p>`;
+    } catch {
+      return `<p class="receipt">Stripe unreachable; nothing was changed.</p>`;
+    }
+  }
+  function wireActions() {
+    $("overlay").querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", async () => {
+      phase = "done";
+      clearHighlight();
+      const cancelled = button.dataset.action === "cancel";
+      const title = cancelled ? "Your Pro plan will end at the close of this billing period." : "You're still on Pro.";
+      const copy = cancelled ? (lastResult.yes ? "Your credit is yours to keep." : "You can resubscribe any time.")
+        : lastResult.yes ? "Your credit is applied to your upcoming invoices." : `Your ${OFFER.percent}% discount is applied for the next ${OFFER.months} months.`;
+      let receipt = "";
+      if (LIVE) {
+        showSheet(`<h3 id="modal-title">One moment…</h3>`, "confirmation");
+        receipt = await stripeReceipt(cancelled);
+      }
+      showSheet(`<h3 id="modal-title">${title}</h3><p class="confirm-copy">${copy}</p>${receipt}<div><button class="btn" id="resetBtn" aria-keyshortcuts="R">Done</button></div>`, "confirmation");
+      $("resetBtn").addEventListener("click", () => reset(true));
+    }));
+  }
+  /* ---------- live mode: the real agent over SSE, served by `nexus serve` ---------- */
+  let API_AVAILABLE = false;
+  const PARAMS = new URLSearchParams(location.search);
+  let LIVE = false;
+  const fmtDay = iso => fmt(new Date(iso.slice(0, 10) + "T00:00:00Z"));
+  const numeric = s => Number(String(s).replace(/[^\d.]/g, ""));
+
+  function liveSparkline(view) {
+    const v = view.series, x0 = 17, x1 = 235, y0 = 20, y1 = 89;
+    const x = i => x0 + i / (v.length - 1) * (x1 - x0), y = n => y1 - n / 7 * (y1 - y0);
+    const line = "M" + v.map((n, i) => `${x(i).toFixed(1)},${y(n).toFixed(1)}`).join(" L");
+    return `<svg class="spark" viewBox="0 0 250 111" role="img" aria-label="Weekly active days: ${v.join(", ")}">
+      <line class="grid" x1="${x0}" x2="${x1}" y1="${y1}" y2="${y1}"/><text x="2" y="${y0 + 3}">7</text><text x="2" y="${y1 + 3}">0</text>
+      <path class="area" d="${line} L${x1},${y1} L${x0},${y1} Z"/>
+      <line class="base" x1="${x0}" x2="${x1}" y1="${y(view.baseline)}" y2="${y(view.baseline)}"/>
+      <path class="line" d="${line}"/><circle class="dot" cx="${x1}" cy="${y(v[v.length - 1])}" r="3.5"/>
+      <text x="${x0}" y="107">${fmtDay(view.weeks[0])}</text><text x="${x1}" y="107" text-anchor="end">today</text></svg>`;
+  }
+  function friendlyLine(app, view) {
+    const line = view.line || "";
+    if (app === "sentry") {
+      const m = line.match(/^(\w+) · (?:peak )?(\d{4}-\d{2}-\d{2})(, fixed in \S+)?/);
+      if (m) return `${/Sync/.test(m[1]) ? "failed data syncs" : "errors"} on${fmtDay(m[2])}${m[3] ? " · since fixed" : ""}`;
+      return view.big === "0" ? "no errors for this customer" : line;
+    }
+    if (app === "datadog") {
+      const inc = view.incident || view.incidents?.[0];
+      if (inc?.start && inc?.end) return `outage in their region on ${fmtDay(inc.start)}, ${inc.start.slice(11, 16)}–${inc.end.slice(11, 16)} UTC`;
+      const m = line.match(/(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})–(\d{2}:\d{2})/);
+      if (m) return `outage in their region on ${fmtDay(m[1])}, ${m[2]}–${m[3]} UTC`;
+      return view.big === "0" ? "no outages in their region" : "outage in their region";
+    }
+    if (app === "mixpanel") return line.replace(/\bis sync\b/, "is data syncing").replace(/\d{4}-\d{2}-\d{2}/, d => fmtDay(d));
+    return line;
+  }
+  function renderLiveSource(app, view) {
+    const tile = $(app), old = tile.dataset.big;
+    if (tile.dataset.state === "done" && app === "sentry" && numeric(view.big) < numeric(old)) return;
+    tile.dataset.big = view.big;
+    $(`${app}-data`).innerHTML = `<div class="big">${esc(view.big)}</div><p class="source-line">${esc(friendlyLine(app, view))}</p>${view.series ? liveSparkline(view) : ""}<div class="evidence-id">${esc(view.evidence)}</div>`;
+    setSource(app, "done");
+  }
+  function addTrace(step) {
+    $("traceBox").hidden = false;
+    $("trace").insertAdjacentHTML("beforeend", `<li><span>${step.n}</span><span><b>${esc(step.tool)}</b> → ${esc(step.summary)}</span></li>`);
+    $("traceSummary").textContent = `Agent steps · ${step.n} · ${step.tool}`;
+  }
+  function gateDetail(i, ctx) {
+    const steps = ctx.steps, v = ctx.verdict || {}, found = {}, latest = {};
+    steps.forEach(s => (s.evidence_ids || []).forEach(id => { found[id] = found[id] || s; latest[id] = s; }));
+    const list = items => items.length ? `<ul>${items.map(t => `<li>${t}</li>`).join("")}</ul>` : "<p>Nothing to show for this check.</p>";
+    const latestView = (app, key) => [...steps].reverse().find(s => s.app === app && s.view && s.view[key])?.view;
+    const issue = latestView("sentry", "issue")?.issue;
+    const incident = latestView("datadog", "incident")?.incident || latestView("datadog", "incidents")?.incidents?.[0];
+    const usage = latestView("mixpanel", "share_by_feature");
+    const harm =(v.harm_ids || []).map(id => latest[id] ? `<b>${esc(id)}</b> · ${esc(latest[id].view ? friendlyLine(latest[id].app, latest[id].view) : latest[id].summary)}` : `<b>${esc(id)}</b>`);
+    if (i === 0) {
+      const cited = [...(v.harm_ids || []), ...(v.usage_ids || [])];
+      return cited.length
+        ? list(cited.map(id => found[id] ? `<b>${esc(id)}</b> was fetched by <code>${esc(found[id].tool)}</code> in step ${found[id].n}` : `<b>${esc(id)}</b> was never fetched`))
+        : "<p>The agent cited nothing, so there was nothing it could invent.</p>";
+    }
+    if (i === 1) {
+      if (!issue) return harm.length ? list(harm) : "<p>Sentry shows no errors on this customer's account.</p>";
+      return list([`<b>${esc(issue.id)}</b> · ${issue.count} ${esc(issue.type)} errors for this customer, most on ${fmtDay(issue.peak)}`,
+                   ...(issue.release ? [`Fixed in ${esc(issue.release)}, no errors since`] : []), "Needs 10 or more errors on their own account"]);
+    }
+    if (i === 2) {
+      if (!incident) return "<p>No declared outage in this customer's region matched their errors.</p>";
+      return list([`<b>${esc(incident.id)}</b> · “${esc(incident.title)}” (${esc(incident.severity)}) in ${esc(incident.region)}`,
+                   `${fmtDay(incident.start)}, ${incident.start.slice(11, 16)}–${incident.end.slice(11, 16)} UTC, the same day as their errors`]);
+    }
+    if (i === 3) {
+      if (!usage) return "<p>No usage data was cited.</p>";
+      const entries = Object.entries(usage.share_by_feature).sort((a, b) => b[1] - a[1]);
+      return list([...entries.map(([f, s]) => `${esc(f === "sync" ? "data syncing" : f)}: <b>${Math.round(s * 100)}%</b> of their activity`),
+                   `<b>${usage.active}</b> teammates active on ${fmtDay(usage.day)}`,
+                   "Needs the broken feature to be 50% or more of their activity, with someone working that day"]);
+    }
+    return list([`Agent's confidence: <b>${v.confidence ?? "–"}</b> (needs 0.75)`, ...(v.reasoning ? [`“${esc(v.reasoning)}”`] : [])]);
+  }
+  function renderLiveGates(gates, ctx = { steps: [], verdict: null }) {
+    $("gates").innerHTML = gateNames.map((name, i) => {
+      const g = gates[i], state = !g ? "wait" : g.status === "skipped" ? "skip" : g.status;
+      const mark = state === "pass" ? "✓" : state === "fail" ? "✗" : state === "skip" ? "—" : i + 1;
+      const why = !g ? "" : state === "skip" ? "Not checked, already stopped" : esc(g.reason);
+      const body = g && state !== "skip" ? `<div class="gate-detail">${gateDetail(i, ctx)}</div>` : "";
+      return `<li id="gate-${i + 1}" data-r="${state}"><details${body ? "" : " class=\"empty\""}><summary><span class="mark">${mark}</span><span class="gate-name">${name}</span><span class="why">${why}</span></summary>${body}</details></li>`;
+    }).join("");
+    $("gates").querySelectorAll("details").forEach(d => d.addEventListener("toggle", () => {
+      if (d.open) $("gates").querySelectorAll("details[open]").forEach(o => { if (o !== d) o.open = false; });
+    }));
+    const failed = gates.find(g => g.status === "fail");
+    $("gate-progress").textContent = failed ? `Stopped at gate ${failed.n}` : `${gates.length} of 5 passed`;
+  }
+  function liveVerdict(d) {
+    $("verdict").dataset.v = d.remediate ? "yes" : "no";
+    $("verdict").innerHTML = d.remediate
+      ? `<strong>Proven: our outage caused this.</strong><p>All five checks passed. Remediation: the evidence, the fix, and a credit.</p>`
+      : d.claim === "no_harm"
+        ? `<strong>No proof of harm. No remediation.</strong><p>No harm found. Standard offer, with no claim of fault.</p>`
+        : `<strong>Harm found, not proven. No remediation.</strong><p>Stopped at gate ${d.stopped_at}. Standard offer, with no claim of fault.</p>`;
+  }
+  function liveRemediation(r, harmIds = []) {
+    lastResult = { yes: true, incident: harmIds.find(id => id.startsWith("INC-")) || harmIds[0] };
+    showSheet(`<span class="customer-brand">A note from Mergeline</span><h3 id="modal-title">${esc(r.headline)}</h3>
+      <p class="letter">${esc(r.letter)}</p>
+      <ul class="proof">${r.proof.map(p => `<li><button data-source="${p.app}">${esc(p.text)}</button></li>`).join("")}</ul>
+      ${r.fixed_line ? `<p class="fixedline">✓ ${esc(r.fixed_line)}</p>` : ""}<p class="credit">${esc(r.credit_line)}</p>
+      <div class="modal-actions"><button class="btn" data-action="kept">${esc(r.accept_label)}</button><button class="btn" data-action="cancel">${esc(r.decline_label)}</button></div>`, "remediation");
+    document.querySelectorAll("[data-source]").forEach(b => {
+      b.addEventListener("mouseenter", () => highlight(b.dataset.source));
+      b.addEventListener("mouseleave", clearHighlight);
+    });
+    wireActions();
+  }
+  function liveOffer(o) {
+    lastResult = { yes: false };
+    if (!o) return standardOffer();
+    showSheet(`<span class="customer-brand">Before you go</span><h3 id="modal-title">${esc(o.headline)}</h3><p class="confirm-copy">${esc(o.body)}</p><div class="modal-actions"><button class="btn" data-action="keep">${esc(o.accept_label)}</button><button class="btn" data-action="cancel">${esc(o.decline_label)}</button></div>`, "confirm");
+    wireActions();
+  }
+  function runLive() {
+    if (phase !== "idle") return;
+    const token = ++runToken, gates = [];
+    let remediationData = null, finished = false, harmIds = [];
+    phase = "running";
+    $("cancelBtn").disabled = true; $("cancelBtn").textContent = "One moment…";
+    $("scoper").dataset.state = "running";
+    $("scope").textContent = "Nexus agent is investigating…";
+    $("verdict").innerHTML = `<strong>Did we cause this?</strong><p>The agent is checking Sentry, Datadog and Mixpanel.</p>`;
+    sources.forEach(id => setSource(id, "running"));
+    const query = new URLSearchParams({ scenario: current.key, agent: PARAMS.get("agent") || "claude" });
+    if (PARAMS.has("fresh")) query.set("fresh", "true");
+    const es = new EventSource(`/api/runs/stream?${query}`);
+    const on = (type, fn) => es.addEventListener(type, ev => {
+      if (token !== runToken) return es.close();
+      fn(JSON.parse(ev.data));
+    });
+    const finish = (outcome, offer, claim) => {
+      finished = true; es.close();
+      sources.forEach(id => { if ($(id).dataset.state === "running") setSource(id, "done"); });
+      phase = "revealed";
+      if (outcome === "remediation" && remediationData) return liveRemediation(remediationData, harmIds);
+      $("ghost-stamp").textContent = claim === "no_harm" ? "Blocked — no evidence of harm" : "Blocked — no causal proof";
+      $("ghost").hidden = false;
+      liveOffer(offer);
+    };
+    let claim = "no_harm";
+    let replayed = false;
+    on("meta", d => { replayed = d.replayed; });
+    on("run.started", d => {
+      const model = d.model === "fake" ? "scripted test agent" : "Claude Sonnet 5";
+      $("footnote").textContent = `${replayed ? "Replaying a recorded run" : "Live run"} · ${model} · ${d.data} data from Sentry, Datadog, Mixpanel, Stripe`;
+      $("scope").textContent = `Looking at ${fmtDay(d.window.since)} – ${fmtDay(d.window.until)} · ${d.account.region}`;
+      $("scoper").dataset.state = "done";
+    });
+    const ctx = { steps: [], verdict: null, account: null };
+    on("run.started", d => { ctx.account = d.account; });
+    on("step",d => { ctx.steps.push(d); addTrace(d); if (d.app && d.view && d.view.big !== undefined) renderLiveSource(d.app, d.view); });
+    on("gate", d => { gates.push(d); renderLiveGates(gates, ctx); });
+    on("decision", d => { claim = d.claim; liveVerdict(d); });
+    on("verdict", d => { harmIds = d.harm_ids || []; ctx.verdict = d; });
+    on("remediation", d => { remediationData = d; });
+    on("run.done", d => finish(d.outcome, d.offer, claim));
+    es.onerror = () => { if (!finished && token === runToken) finish("standard_offer", null, "insufficient_evidence"); };
+  }
+  function setLive(on) {
+    LIVE = on && API_AVAILABLE;
+    $("liveMode").checked = LIVE;
+    $("footnote").textContent = LIVE ? "Live agent · Claude Sonnet 5 · Sentry, Datadog, Mixpanel, Stripe" : "Prototype · simulated data · no models called";
+    reset();
+  }
+
+  function run() { return LIVE ? runLive() : runSimulated(); }
+
+  async function runSimulated() {
+    if (phase !== "idle") return;
+    const token = ++runToken, w = world(), r = judge(w);
+    phase = "running"; lastResult = r;
+    $("cancelBtn").disabled = true; $("cancelBtn").textContent = "One moment…";
+    $("mergeline-app").setAttribute("aria-busy", "true");
+    $("scoper").dataset.state = "running";
+    $("scope").textContent = "Finding this workspace's evidence…";
+    $("verdict").innerHTML = `<strong>Did we cause this?</strong><p>Checking the evidence before saying a word.</p>`;
+    await sleep(400); if (token !== runToken) return;
+    $("scope").textContent = `Looking at ${fmt(WEEKS[0])} – ${fmt(CANCEL)} · ${w.region}`;
+    $("scoper").dataset.state = "done";
+    sources.forEach(id => setSource(id, "running"));
+    await Promise.all(sources.map(async (id, i) => {
+      await sleep(760 + i * 120);
+      if (token === runToken) renderSource(id, w, r);
+    }));
+    if (token !== runToken) return;
+    await sleep(500); if (token !== runToken) return;
+    const count = r.yes ? 5 : r.gates.findIndex(g => !g.pass) + 1;
+    for (let i = 1; i <= count; i++) {
+      await sleep(250); if (token !== runToken) return;
+      renderGates(r, i);
+    }
+    // Hold a stopped decision calmly; later checks never run or flash red.
+    await sleep(350 + (5 - count) * 250); if (token !== runToken) return;
+    verdict(r);
+    await sleep(400); if (token !== runToken) return;
+    phase = "revealed";
+    $("mergeline-app").setAttribute("aria-busy", "false");
+    if (r.yes) remediation(w, r);
+    else {
+      $("ghost-stamp").textContent = !r.harm ? "Blocked — no evidence of harm" : "Blocked — no causal proof";
+      $("ghost").hidden = false;
+      standardOffer();
+    }
+  }
+  function reset(focus = false) {
+    runToken++; phase = "idle"; lastResult = null;
+    clearHighlight();
+    $("overlay").hidden = true; $("overlay").innerHTML = "";
+    $("mergeline-app").inert = false; $("mergeline-app").setAttribute("aria-busy", "false");
+    $("workspace").textContent = current.name;
+    $("seats").textContent = `${current.seats} seats`;
+    $("cancelBtn").disabled = false; $("cancelBtn").textContent = "Cancel subscription";
+    $("scoper").dataset.state = "idle"; $("scope").textContent = "Waiting for a cancellation.";
+    sources.forEach((id, i) => {
+      setSource(id, "idle"); $(id).removeAttribute("title");
+      $(`${id}-data`).innerHTML = `<div class="big">—</div><p class="source-line">${["Account errors", "Regional incidents", "Weekly usage"][i]}</p><span class="evidence-id">Awaiting evidence</span>`;
+    });
+    renderGates(judge(world()), 0);
+    $("verdict").dataset.v = ""; delete $("verdict").dataset.code;
+    $("verdict").innerHTML = `<strong>No remediation is assumed.</strong><p>Click Cancel subscription to see whether the evidence proves otherwise.</p>`;
+    $("ghost").hidden = true;
+    $("trace").innerHTML = ""; $("traceBox").hidden = true; $("traceBox").open = false;
+    sources.forEach(id => delete $(id).dataset.big);
+    if (focus) $("cancelBtn").focus({preventScroll:true});
+  }
+  function select(key, focus = false) {
+    current = SCENARIOS.find(s => s.key === key);
+    const linked = current.errors.find(e => e.linked);
+    edits = {shift:0, errs:linked ? linked.count : 0, region:current.region};
+    document.querySelectorAll(".acct").forEach(b => b.setAttribute("aria-pressed", b.dataset.key === key));
+    reset(focus);
+  }
+  $("cancelBtn").addEventListener("click", run);
+  document.querySelectorAll(".acct").forEach(b => b.addEventListener("click", () => select(b.dataset.key)));
+  $("custView").addEventListener("change", e => $("stage").classList.toggle("customer", e.target.checked));
+  sources.forEach(app => $(app).addEventListener("click", () => { if (API_AVAILABLE) window.open(`/apps/${app}?scenario=${encodeURIComponent(current.key)}`, "_blank"); }));
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      if (phase === "revealed" || phase === "done") reset(true);
+      return;
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || e.target.closest("input,select,textarea,[contenteditable='true']")) return;
+    if (e.key.toLowerCase() === "r") { e.preventDefault(); reset(true); }
+    if (e.key === "1" || e.key === "2") { e.preventDefault(); select(e.key === "1" ? "fathom" : "quanta", true); }
+    if (e.key === "Enter" && phase === "idle" && (e.target === $("cancelBtn") || e.target.closest(".acct") || !e.target.closest("button,a"))) { e.preventDefault(); run(); }
+    if (e.key === "Tab" && $("custView").checked && !$("overlay").hidden && $("overlay").contains(e.target)) {
+      const buttons = [...$("overlay").querySelectorAll("button")];
+      if (e.shiftKey && (e.target === buttons[0] || e.target === $("customer-modal"))) { e.preventDefault(); buttons[buttons.length - 1].focus(); }
+      else if (!e.shiftKey && e.target === buttons[buttons.length - 1]) { e.preventDefault(); buttons[0].focus(); }
+    }
+  });
+  select("fathom");
+  $("liveMode").disabled = true;
+  $("liveMode").closest("label").title = "Run `nexus serve` and open http://127.0.0.1:8000 for the live agent";
+  $("liveMode").addEventListener("change", e => setLive(e.target.checked));
+  fetch("/api/business").then(r => (r.ok ? r.json() : null)).then(b => {
+    if (!b || !b.standard_offer) return;
+    API_AVAILABLE = true;
+    OFFER.percent = b.standard_offer.percent_off; OFFER.months = b.standard_offer.months;
+    $("liveMode").disabled = false; $("liveMode").closest("label").title = "";
+    setLive(true);
+  }).catch(() => {});
+})();
+</script>

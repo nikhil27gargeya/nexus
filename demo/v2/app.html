@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus · Evidence</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap">
+<style>
+:root{
+  --ground:#EDF0ED; --surface:#FFFFFF; --panel:#F6F8F6; --ink:#17201C; --ink-2:#4A5752; --ink-3:#7A8681;
+  --line:#D3DAD6; --nexus:#1F5F5B; --nexus-soft:#DCEBE8; --evidence:#9A5710; --pass:#2E7A4B; --pass-soft:#DDEFE3;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1311; --surface:#171C1A; --panel:#1B221F; --ink:#E3E9E6; --ink-2:#A9B4AF; --ink-3:#75817C;
+    --line:#2C3531; --nexus:#72C1B6; --nexus-soft:#1D3330; --evidence:#E1A55C; --pass:#6CC08D; --pass-soft:#1C3325;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1311; --surface:#171C1A; --panel:#1B221F; --ink:#E3E9E6; --ink-2:#A9B4AF; --ink-3:#75817C;
+  --line:#2C3531; --nexus:#72C1B6; --nexus-soft:#1D3330; --evidence:#E1A55C; --pass:#6CC08D; --pass-soft:#1C3325;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:880px;margin:0 auto;padding:32px 28px 64px}
+a{color:var(--nexus)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px;font-size:14px}
+.brand{font-weight:600;color:var(--nexus);font-size:20px;letter-spacing:-.5px;text-decoration:none}
+.eyebrow{font-weight:600;color:var(--ink-2);font-size:14px}
+h1{font-size:32px;line-height:1.15;letter-spacing:-.8px;margin:6px 0 10px;text-wrap:balance}
+.role{color:var(--ink-2);max-width:66ch;margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-top:20px}
+h2{font-size:13px;font-weight:600;color:var(--ink-3);margin:0 0 10px}
+.meaning{font-size:18px;line-height:1.55;margin:0;max-width:64ch}
+.meaning b{font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--ink-3);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td small{display:block;color:var(--ink-3);font-size:12px}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+code{font-family:var(--sans);font-size:14px;font-weight:500;color:var(--evidence)}
+.note{font-size:13px;color:var(--ink-3);margin:10px 0 0}
+.kv{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px 16px;margin:0}
+.kv dt{color:var(--ink-3)}.kv dd{margin:0}
+.bars{display:grid;gap:10px}
+.bar-row{display:grid;grid-template-columns:110px minmax(0,1fr) 52px;gap:12px;align-items:center}
+.bar-track{height:12px;background:var(--panel);border-radius:6px;overflow:hidden}
+.bar-fill{display:block;height:100%;background:var(--nexus);border-radius:6px}
+.asked{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--ink-2);font-size:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px}
+.tabs a{padding:7px 12px;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--ink-2);background:var(--surface);font-size:14px}
+.tabs a[aria-current="page"]{border-color:var(--nexus);color:var(--nexus);background:var(--nexus-soft);font-weight:600}
+.footer{margin-top:28px;font-size:13px;color:var(--ink-3)}
+@media (max-width:560px){.wrap{padding:24px 16px 48px}h1{font-size:26px}.kv{grid-template-columns:minmax(0,1fr)}.bar-row{grid-template-columns:80px minmax(0,1fr) 44px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="brand" href="/">Nexus</a><a href="/">← Back to the demo</a></div>
+  <nav class="tabs" id="tabs" aria-label="Apps"></nav>
+  <span class="eyebrow" id="appName"></span>
+  <h1 id="question">Loading…</h1>
+  <p class="role" id="role"></p>
+  <section class="card"><h2>What it means</h2><p class="meaning" id="meaning"></p></section>
+  <section class="card" id="foundCard"><h2>What Nexus found</h2><div id="found"></div></section>
+  <section class="card"><h2 id="askedTitle">What the agent asked</h2><ol class="asked" id="asked"></ol></section>
+  <p class="footer" id="footer"></p>
+</div>
+<script>
+(() => {
+  const APPS = {
+    sentry: { name: "Sentry", question: "Did this customer hit the failure?",
+      role: "Sentry records errors from Mergeline's code, tagged with the customer who hit them. It's the only app that can say a specific customer was affected. It only ever sees failures, never normal use." },
+    datadog: { name: "Datadog", question: "Was it a confirmed outage where they are?",
+      role: "Datadog is where the engineering team declares incidents: what broke, in which region, and for how long. It turns scattered errors into a confirmed outage." },
+    mixpanel: { name: "Mixpanel", question: "Did it break something they depend on?",
+      role: "Mixpanel records how each team uses Mergeline, feature by feature. Sentry and Datadog only see failures; Mixpanel is the only app that sees normal work, so it shows whether the broken feature matters to this customer." },
+  };
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+  const fmtDay = iso => new Date(String(iso).slice(0, 10) + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  const label = f => (f === "sync" ? "data syncing" : f);
+  const app = location.pathname.split("/").filter(Boolean).pop();
+  const scenario = new URLSearchParams(location.search).get("scenario") || "fathom";
+  const info = APPS[app] || APPS.sentry;
+
+  document.title = `Nexus · ${info.name} evidence`;
+  $("tabs").innerHTML = Object.entries(APPS).map(([key, a]) =>
+    `<a href="/apps/${key}?scenario=${encodeURIComponent(scenario)}"${key === app ? ' aria-current="page"' : ""}>${a.name}</a>`).join("");
+  $("appName").textContent = info.name;
+  $("question").textContent = info.question;
+  $("role").textContent = info.role;
+  $("askedTitle").textContent = `What the agent asked ${info.name}`;
+
+  function render(events) {
+    const started = events.find(e => e.type === "run.started")?.data || {};
+    const name = esc(started.account?.name || scenario);
+    const steps = events.filter(e => e.type === "step").map(e => e.data);
+    const mine = steps.filter(s => s.app === app);
+    const latest = key => [...mine].reverse().find(s => s.view && s.view[key])?.view;
+    let meaning = "", found = "";
+
+    if (app === "sentry") {
+      const issues = latest("issues")?.issues || [];
+      const main = mine.filter(s => s.view?.issue).map(s => s.view.issue).sort((a, b) => b.count - a.count)[0];
+      meaning = !issues.length
+        ? `${name}'s account shows no errors in this period. Whatever made them cancel, it wasn't a failure Sentry saw.`
+        : main
+          ? `${name}'s workspace hit <b>${main.count} ${esc(main.type)}</b> errors, most of them on <b>${fmtDay(main.peak)}</b>. ${main.release ? `The bug was fixed in ${esc(main.release)} and hasn't happened since.` : "The issue is still open."}`
+          : `${name}'s account shows ${issues.length} kind(s) of error in this period, none heavy enough to open.`;
+      found = issues.length
+        ? `<table><thead><tr><th>Issue</th><th>Error</th><th class="num">Errors for this customer</th><th>First seen</th></tr></thead><tbody>${
+            issues.map(i => `<tr><td><code>${esc(i.id)}</code></td><td>${esc(i.type)}<small>${esc(i.title)}</small></td><td class="num">${i.count}</td><td>${fmtDay(i.first_seen)}</td></tr>`).join("")
+          }</tbody></table>${main?.daily ? `<p class="note">Errors per day for ${esc(main.id)}: ${Object.entries(main.daily).map(([d, n]) => `${fmtDay(d)} · ${n}`).join(", ")}</p>` : ""}`
+        : "<p>No errors recorded for this customer.</p>";
+    } else if (app === "datadog") {
+      const incident = latest("incident")?.incident || latest("incidents")?.incidents?.[0];
+      const region = latest("region")?.region || started.account?.region || "their region";
+      meaning = incident
+        ? `The team declared <b>“${esc(incident.title)}”</b> (${esc(incident.severity)}) in <b>${esc(incident.region)}</b> on <b>${fmtDay(incident.start)}</b>, ${esc(incident.start.slice(11, 16))}–${esc(incident.end.slice(11, 16))} UTC. ${name} runs in ${esc(incident.region)}, so this outage was real for them.`
+        : `No incidents were declared in <b>${esc(region)}</b> during this period, so there was no confirmed outage where ${name} runs.`;
+      found = incident
+        ? `<dl class="kv"><dt>Incident</dt><dd><code>${esc(incident.id)}</code></dd><dt>Title</dt><dd>${esc(incident.title)}</dd><dt>Severity</dt><dd>${esc(incident.severity)}</dd><dt>Region</dt><dd>${esc(incident.region)}</dd><dt>Started</dt><dd>${esc(incident.start)}</dd><dt>Ended</dt><dd>${esc(incident.end)}</dd></dl>`
+        : `<p>Datadog returned no incidents for ${esc(region)}.</p>`;
+    } else {
+      const view = latest("share_by_feature");
+      const entries = Object.entries(view?.share_by_feature || {}).sort((a, b) => b[1] - a[1]);
+      if (entries.length) {
+        const [top, share] = entries[0];
+        meaning = `<b>${esc(label(top))}</b> is <b>${Math.round(share * 100)}%</b> of everything ${name} does in Mergeline. On <b>${fmtDay(view.day)}</b>, <b>${view.active}</b> of their teammates were working. This is how Nexus knows whether a failure hit something this team relies on.`;
+        found = `<div class="bars">${entries.map(([f, s]) => `<div class="bar-row"><span>${esc(label(f))}</span><span class="bar-track"><span class="bar-fill" style="width:${Math.round(s * 100)}%"></span></span><span class="num">${Math.round(s * 100)}%</span></div>`).join("")}</div>`;
+      } else {
+        meaning = "Mixpanel has no activity recorded for this customer.";
+      }
+    }
+
+    $("meaning").innerHTML = meaning;
+    $("found").innerHTML = found;
+    $("foundCard").hidden = !found;
+    $("asked").innerHTML = mine.length
+      ? mine.map(s => `<li><code>${esc(s.tool)}</code> → ${esc(s.summary)}</li>`).join("")
+      : `<li>The agent didn't need ${info.name} for this customer.</li>`;
+    const window = started.window ? ` · ${fmtDay(started.window.since)} – ${fmtDay(started.window.until)}` : "";
+    $("footer").textContent = `${started.account?.name || scenario}${window} · recorded ${started.model === "fake" ? "scripted" : "Claude Sonnet 5"} run on ${started.data || "live"} data`;
+  }
+
+  fetch(`/api/runs/latest?scenario=${encodeURIComponent(scenario)}`)
+    .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then(render)
+    .catch(() => {
+      $("meaning").textContent = "No recorded run for this customer yet. Go back to the demo and click Cancel subscription first.";
+      $("foundCard").hidden = true;
+    });
+})();
+</script>
+</body>
+</html>
